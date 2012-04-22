@@ -11,6 +11,7 @@ import com.mongodb.ServerAddress;
 
 public abstract class AbstractMongoDatasourceFactory {
 	protected MongoConfig config;
+	private Mongo mongo;
 
 	public AbstractMongoDatasourceFactory(MongoConfig config) {
 		this.config = config;
@@ -18,7 +19,11 @@ public abstract class AbstractMongoDatasourceFactory {
 
 	public Mongo getMongoDatasource(String host, int port) throws MongoDatasourceException {
 		try {
-			return new Mongo(host, port);
+			if (mongo != null) {
+				mongo.close();
+			}
+			mongo = new Mongo(host, port);
+			return mongo;
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			throw new MongoDatasourceException(e);
@@ -30,10 +35,19 @@ public abstract class AbstractMongoDatasourceFactory {
 
 	public Mongo getMongoDatasource() throws MongoDatasourceException {
 		try {
-			return new Mongo(new ServerAddress(config.getHost(), config.getPort()), config);
+			if (mongo != null) {
+				mongo.close();
+			}
+			mongo = new Mongo(new ServerAddress(config.getHost(), config.getPort()), config);
+			return mongo;
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			throw new MongoDatasourceException(e);
 		}
+	}
+
+	public void destory() {
+		if (mongo != null)
+			mongo.close();
 	}
 }

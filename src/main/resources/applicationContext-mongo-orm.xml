@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns=" http://www.springframework.org/schema/beans"
-	xmlns:xsi=" http://www.w3.org/2001/XMLSchema-instance" xmlns:context=" http://www.springframework.org/schema/context"
-	xmlns:aop=" http://www.springframework.org/schema/aop" xmlns:tx=" http://www.springframework.org/schema/tx"
-	xsi:schemaLocation=" http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
-http://www.springframework.org/schema/context
-http://www.springframework.org/schema/context/spring-context-2.5.xsd
-http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
-http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+	<bean id="dataSourceFactory" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory" abstract="true">
+		<!-- <constructor-arg>
+			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
+				<property name="host" value="localhost" />
+				<property name="port" value="8888" />
+			</bean>
+		</constructor-arg> -->
+	</bean>
+
+	<bean id="mongoDBFactory" class="github.macrohuang.orm.mongo.factory.DefaultMongoDBFactory" autowire="byType">
+		<!-- <property name="datasourceFactory" ref="dataSourceFactory"></property> -->
+	</bean>
+	
+	<bean id="mongoDBTemplate" class="github.macrohuang.orm.mongo.core.MongoDBTemplate" autowire="byType">
+		<!-- <property name="dbFactory" ref="mongoDBFactory"></property>-->
+	</bean>
 </beans>

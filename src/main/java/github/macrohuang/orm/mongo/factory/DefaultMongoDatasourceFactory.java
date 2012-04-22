@@ -7,7 +7,6 @@ public class DefaultMongoDatasourceFactory extends AbstractMongoDatasourceFactor
 	public DefaultMongoDatasourceFactory() {
 		super(new MongoConfig());
 	}
-
 	public DefaultMongoDatasourceFactory(MongoConfig config) {
 		super(config);
 	}

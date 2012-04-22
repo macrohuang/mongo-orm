@@ -1,7 +1,16 @@
 package github.macrohuang.orm.mongo.base;
 
-import github.macrohuang.orm.mongo.core.ServiceLocator;
+import github.macrohuang.orm.mongo.core.MongoDBTemplate;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class BaseTest {
-	ServiceLocator serviceLocator = ServiceLocator.getInstance();
+	protected ApplicationContext applicationContext;
+	protected MongoDBTemplate template;
+
+	public BaseTest() {
+		applicationContext = new ClassPathXmlApplicationContext("applicationContext-test.xml");
+		template = (MongoDBTemplate) applicationContext.getBean("mongoDBTemplate");
+	}
 }

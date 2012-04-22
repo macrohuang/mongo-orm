@@ -7,7 +7,6 @@ public class Page<T> {
 	private int pageNum;
 	private int pageSize;
 	private int totalCount;
-	private int pageCount;
 
 	public List<T> getResults() {
 		return results;
@@ -42,10 +41,20 @@ public class Page<T> {
 	}
 
 	public int getPageCount() {
-		return pageCount;
+		if (totalCount > 0) {
+			if (pageSize > 0) {
+				return (totalCount - 1) / pageSize + 1;
+			} else {
+				return 1;
+			}
+		} else {
+			return 0;
+		}
 	}
 
-	public void setPageCount(int pageCount) {
-		this.pageCount = pageCount;
+	@Override
+	public String toString() {
+		return "Page [results=" + results + ", pageNum=" + pageNum + ", pageSize=" + pageSize + ", totalCount=" + totalCount + "]";
 	}
+
 }

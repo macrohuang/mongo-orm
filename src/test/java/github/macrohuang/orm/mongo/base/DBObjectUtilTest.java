@@ -5,8 +5,10 @@ import github.macrohuang.orm.mongo.annotation.MongoField;
 import github.macrohuang.orm.mongo.util.DBObjectUtil;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -15,7 +17,7 @@ import org.junit.Test;
 import com.mongodb.DBObject;
 
 public class DBObjectUtilTest {
-	private static final Logger LOGGER = Logger.getLogger(DBObjectUtilTest.class.getName());
+	private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(DBObjectUtilTest.class.getName());
 	@Document(db = "cpcreport", collection = "cpc")
 	public static class CpcReport {
 		@MongoField
@@ -33,6 +35,8 @@ public class DBObjectUtilTest {
 		private String[] desc2;
 
 		@MongoField
+		private Map<String, Object> map;
+		@MongoField
 		private CpcReport child;
 
 		public CpcReport() {
@@ -42,13 +46,17 @@ public class DBObjectUtilTest {
 			this.groupName = "test";
 			this.desc = Arrays.asList("a", "b", "c");
 			this.desc2 = new String[] { "1", "2", "3" };
+			this.map = new HashMap<String, Object>();
+			map.put("abc", 1234);
+			map.put("bcd", new Date());
 		}
 
 		@Override
 		public String toString() {
-			return String.format("{id:%s,accountId:%d,groupId:%d,groupName:%s,desc:%s,desc2:%s}", id, accountId, groupId, groupName,
-					desc == null ? "" : desc.toString(), desc2 == null ? "" : Arrays.toString(desc2));
+			return "CpcReport [id=" + id + ", accountId=" + accountId + ", groupId=" + groupId + ", groupName=" + groupName + ", desc=" + desc
+					+ ", desc2=" + Arrays.toString(desc2) + ", map=" + map + ", child=" + child + "]";
 		}
+
 		public String[] getDesc2() {
 			return desc2;
 		}

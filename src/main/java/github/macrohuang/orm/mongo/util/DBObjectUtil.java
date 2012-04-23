@@ -6,6 +6,7 @@ import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
@@ -106,9 +108,10 @@ public class DBObjectUtil {
 	public static <T> T fillDocument2PO(DBObject dbObject, T po) {
 		if (po == null)
 			throw new MongoDBMappingException("can't not fill a document into a null po.");
-		if (po.getClass().getAnnotation(Document.class) == null) {
-			throw new MongoDBMappingException("can't not fill a document into a non document po.");
-		}
+		// if (po.getClass().getAnnotation(Document.class) == null) {
+		// throw new
+		// MongoDBMappingException("can't not fill a document into a non document po.");
+		// }
 		Field[] fields = FIELD_CACHE_MAP.get(po.getClass().getName());
 		if (fields == null) {
 			fields = po.getClass().getDeclaredFields();
@@ -127,15 +130,10 @@ public class DBObjectUtil {
 							// field.getType().newInstance()));
 							field.set(po, fillDocument2PO((DBObject) docVal, (T) field.getType().newInstance()));
 						} else {
-							// getFieldSetterMethod(po, field).invoke(po,
-							// docVal);
 							if (docVal instanceof BasicDBList) {
 								if (field.getType().isArray()) {
 									Object[] objects = (Object[]) Array
-									        .newInstance(field.getType().getComponentType(), ((BasicDBList) docVal).size());
-									// Arrays.copyOf(((BasicDBList)
-									// docVal).toArray(objects),
-									// objects.length);
+											.newInstance(field.getType().getComponentType(), ((BasicDBList) docVal).size());
 
 									field.set(po, ((BasicDBList) docVal).toArray(objects));
 								} else if (docVal instanceof Collection) {
@@ -148,14 +146,17 @@ public class DBObjectUtil {
 										list.addAll((Collection) docVal);
 										field.set(po, list);
 									}
+									// BeanUtils.setProperty(po,
+									// field.getName(), docVal);
 								} else {
 									field.set(po, docVal);
 								}
 							}
+							// docVal);
 						}
 					} else {
-						// getFieldSetterMethod(po, field).invoke(po, docVal);
-						field.set(po, docVal);
+						BeanUtils.setProperty(po, field.getName(), docVal);
+						// field.set(po, docVal);
 					}
 				} catch (IllegalArgumentException e) {
 					e.printStackTrace();
@@ -169,6 +170,9 @@ public class DBObjectUtil {
 				} catch (InstantiationException e) {
 					e.printStackTrace();
 					throw new MongoDBMappingException("can not instance complex property.", e);
+				} catch (InvocationTargetException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		}

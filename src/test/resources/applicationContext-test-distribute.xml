@@ -10,7 +10,7 @@
 	<bean id="dataSourceFactory1" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
 		 <property name="config">
 			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
-				<property name="host" value="10.11.203.56" />
+				<property name="host" value="dev01.mymongo" />
 				<property name="port" value="8888" />
 				<property name="username" value="write" />
 				<property name="password" value="write" />
@@ -22,7 +22,7 @@
 	<bean id="dataSourceFactory2" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
 		 <property name="config">
 			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
-				<property name="host" value="10.11.203.55" />
+				<property name="host" value="dev02.mymongo" />
 				<property name="port" value="6666" />
 				<property name="username" value="write" />
 				<property name="password" value="write" />

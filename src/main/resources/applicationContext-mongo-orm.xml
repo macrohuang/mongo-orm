@@ -18,7 +18,6 @@
 	<bean id="mongoDBFactory" class="github.macrohuang.orm.mongo.factory.DefaultMongoDBFactory" autowire="byType">
 		<!-- <property name="datasourceFactory" ref="dataSourceFactory"></property> -->
 	</bean>
-	
 	<bean id="mongoDBTemplate" class="github.macrohuang.orm.mongo.core.MongoDBTemplate" autowire="byType">
 		<!-- <property name="dbFactory" ref="mongoDBFactory"></property>-->
 	</bean>

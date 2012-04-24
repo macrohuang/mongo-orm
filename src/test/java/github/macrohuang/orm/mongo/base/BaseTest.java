@@ -13,4 +13,9 @@ public class BaseTest {
 		applicationContext = new ClassPathXmlApplicationContext("applicationContext-test.xml");
 		template = (MongoDBTemplate) applicationContext.getBean("mongoDBTemplate");
 	}
+
+	public static void main(String[] args) {
+		BaseTest baseTest = new BaseTest();
+		System.out.println(baseTest.template);
+	}
 }

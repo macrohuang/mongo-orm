@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+	
+	<bean id="dataSourceFactory1" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
+		 <property name="config">
+			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
+				<property name="host" value="10.11.203.56" />
+				<property name="port" value="8888" />
+				<property name="username" value="write" />
+				<property name="password" value="write" />
+				<property name="needAuth" value="true" />
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="dataSourceFactory2" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
+		 <property name="config">
+			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
+				<property name="host" value="10.11.203.55" />
+				<property name="port" value="6666" />
+				<property name="username" value="write" />
+				<property name="password" value="write" />
+				<property name="needAuth" value="true" />
+			</bean>
+		</property>
+	</bean>
+	
+	<bean id="mongoDBFactory" class="github.macrohuang.orm.mongo.factory.DistributeMongoDBFactory">
+		<property name="datasourceFactories">
+			<set>
+				<ref local="dataSourceFactory1"/>
+				<ref local="dataSourceFactory2"/>
+			</set>
+		</property>
+	</bean>
+	<bean id="mongoDBTemplate" class="github.macrohuang.orm.mongo.core.MongoDBTemplate">
+		<property name="dbFactory" ref="mongoDBFactory" />
+	</bean>
+</beans>

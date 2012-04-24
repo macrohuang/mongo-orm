@@ -1,13 +1,24 @@
 package github.macrohuang.orm.mongo.config;
 
+import java.util.Set;
+
 import com.mongodb.MongoOptions;
 
 public class MongoConfig extends MongoOptions{
 	private String host;
 	private int port = 27017;
 	private boolean needAuth = false;
-	private String userName;
+	private String username;
 	private String password;
+	private Set<String> replicaSetSeeds;
+
+	public Set<String> getReplicaSetSeeds() {
+		return replicaSetSeeds;
+	}
+
+	public void setReplicaSetSeeds(Set<String> replicaSetSeeds) {
+		this.replicaSetSeeds = replicaSetSeeds;
+	}
 
 	public boolean isNeedAuth() {
 		return needAuth;
@@ -17,12 +28,12 @@ public class MongoConfig extends MongoOptions{
 		this.needAuth = needAuth;
 	}
 
-	public String getUserName() {
-		return userName;
+	public String getUsername() {
+		return username;
 	}
 
-	public void setUserName(String userName) {
-		this.userName = userName;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
 	public String getPassword() {
@@ -67,6 +78,7 @@ public class MongoConfig extends MongoOptions{
 
 	@Override
 	public String toString() {
-		return String.format("{host:%s,port:%d,options:{%s}}", host, port, super.toString());
+		return "MongoConfig [host=" + host + ", port=" + port + ", needAuth=" + needAuth + ", username=" + username + ", password=" + password
+				+ ", replicaSetSeeds=" + replicaSetSeeds + "]";
 	}
 }

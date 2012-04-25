@@ -40,7 +40,7 @@ public class Query {
 		return class1;
 	}
 
-	// TODO: Doesn't work!!!
+	// It now works!!!
 	public Query include(String field){
 		if (projection == null)
 			projection = new BasicDBObject();
@@ -51,7 +51,11 @@ public class Query {
 		if (operators == QueryOperators.EQ) {
 			queryObject.put(poField2DocumentMap.get(class1.getName()).get(field), value);
 		} else {
-			queryObject.put(getDocumentField(field), new BasicDBObject(operators.getOperate(), value));
+			if (queryObject.get(getDocumentField(field)) != null) {
+				((BasicDBObject) queryObject.get(getDocumentField(field))).put(operators.getOperate(), value);
+			} else {
+				queryObject.put(getDocumentField(field), new BasicDBObject(operators.getOperate(), value));
+			}
 		}
 		return this;
 	}

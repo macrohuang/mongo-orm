@@ -1,5 +1,6 @@
 package github.macrohuang.orm.mongo.util;
 
+
 import github.macrohuang.orm.mongo.annotation.Document;
 import github.macrohuang.orm.mongo.annotation.MongoField;
 import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
@@ -10,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 public class DBObjectUtil {
-	private static final Map<String, Field[]> FIELD_CACHE_MAP = new ConcurrentHashMap<String, Field[]>();
+	private static final Map<String, Map<String, Field>> FIELD_CACHE_MAP = new ConcurrentHashMap<String, Map<String, Field>>();
 	private static final Logger logger = Logger.getLogger(DBObjectUtil.class);
 
 	public static DBObject convertPO2DBObject(Object object) throws MongoDBMappingException {
@@ -44,14 +46,12 @@ public class DBObjectUtil {
 	}
 
 	public static Method getFieldGetterMethod(Object object, Field field) throws SecurityException, NoSuchMethodException {
-		logger.info("get " + object + " 's Field: " + field);
 		StringBuilder getterMethod = new StringBuilder();
 		getterMethod.append("get").append(("" + field.getName().charAt(0)).toUpperCase()).append(field.getName().substring(1));
 		return object.getClass().getMethod(getterMethod.toString(), new Class[0]);
 	}
 
 	public static String getMongoField(Field field) {
-		logger.info("get " + field + " 's MongoField");
 		MongoField mongoField = field.getAnnotation(MongoField.class);
 		return StringUtils.hasText(mongoField.field()) ? mongoField.field() : field.getName();
 	}
@@ -60,48 +60,37 @@ public class DBObjectUtil {
 		if (object == null || currentDepth == deepth) {
 			return new BasicDBObject();
 		}
-		Field[] fields = FIELD_CACHE_MAP.get(object.getClass().getName());
-		if (fields == null) {
-			fields = object.getClass().getDeclaredFields();
-			FIELD_CACHE_MAP.put(object.getClass().getName(), fields);
-		}
+		Map<String, Field> fields = getFieldMap(object);
 		DBObject dbObject;
 		if (object instanceof Collection) {
 			dbObject = new BasicDBList();
 		} else {
 			dbObject = new BasicDBObject();
 		}
-		for (Field field : fields) {
-			if (field.getAnnotation(MongoField.class) != null) {
-				field.setAccessible(true);
-				try {
-					if (field.getType().getAnnotation(Document.class) != null) {
-						dbObject.put(getMongoField(field), convertPO2DBObjectInner(field.get(object), nullable, deepth, currentDepth + 1));
-						// dbObject.put(getMongoField(field),
-						// convertPO2DBObjectInner(getFieldGetterMethod(object,
-						// field).invoke(object, new Object[0]), deepth,
-						// currentDepth + 1));
-					} else {
-						// dbObject.put(getMongoField(field),
-						// getFieldGetterMethod(object, field).invoke(object,
-						// new Object[0]));
-						// field.setAccessible(true);
-						if (nullable || !nullable && field.get(object) != null) {
-							dbObject.put(getMongoField(field), field.get(object));
-						}
+		Field field;
+		for (String docKey : fields.keySet()) {
+			field = fields.get(docKey);
+			field.setAccessible(true);
+			try {
+				if (field.getType().getAnnotation(Document.class) != null) {
+					dbObject.put(docKey, convertPO2DBObjectInner(field.get(object), nullable, deepth, currentDepth + 1));
+				} else {
+					if (nullable || !nullable && field.get(object) != null) {
+						dbObject.put(docKey, field.get(object));
 					}
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-					throw new MongoDBMappingException("getter should not have any argument", e);
-				} catch (SecurityException e) {
-					e.printStackTrace();
-					throw new MongoDBMappingException("you don't have permission to access this method", e);
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-					throw new MongoDBMappingException("you don't have permission to access this field, properly there doesn't a getter exists.", e);
 				}
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+				throw new MongoDBMappingException("getter should not have any argument", e);
+			} catch (SecurityException e) {
+				e.printStackTrace();
+				throw new MongoDBMappingException("you don't have permission to access this method", e);
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+				throw new MongoDBMappingException("you don't have permission to access this field, properly there doesn't a getter exists.", e);
 			}
 		}
+		logger.info("Convert resutl:" + dbObject);
 		return dbObject;
 	}
 
@@ -111,31 +100,33 @@ public class DBObjectUtil {
 		return object.getClass().getMethod(getterMethod.toString(), field.getType());
 	}
 
+	private static <T> Map<String, Field> getFieldMap(T po) {
+		Map<String, Field> fields = FIELD_CACHE_MAP.get(po.getClass().getName());
+		if (fields == null) {
+			fields = new HashMap<String, Field>();
+			for (Field field : po.getClass().getDeclaredFields()) {
+				if (field.getAnnotation(MongoField.class) != null) {
+					fields.put(getMongoField(field), field);
+				}
+			}
+			FIELD_CACHE_MAP.put(po.getClass().getName(), fields);
+		}
+		return fields;
+	}
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> T fillDocument2PO(DBObject dbObject, T po) {
 		if (po == null)
 			throw new MongoDBMappingException("can't not fill a document into a null po.");
-		logger.info("Fill DBObject:" + dbObject + " into Type:" + po);
-		// if (po.getClass().getAnnotation(Document.class) == null) {
-		// throw new
-		// MongoDBMappingException("can't not fill a document into a non document po.");
-		// }
-		Field[] fields = FIELD_CACHE_MAP.get(po.getClass().getName());
-		if (fields == null) {
-			fields = po.getClass().getDeclaredFields();
-			FIELD_CACHE_MAP.put(po.getClass().getName(), fields);
-		}
-		for (Field field : fields) {
-			if (field.getAnnotation(MongoField.class) != null) {
+		Map<String, Field> fields = getFieldMap(po);
+		Field field;
+		for (String mongoField : dbObject.keySet()) {
+			if (fields.containsKey(mongoField)) {
+				field = fields.get(mongoField);
 				try {
 					field.setAccessible(true);
-					String docKey = getMongoField(field);
-					Object docVal = dbObject.get(docKey);
+					Object docVal = dbObject.get(mongoField);
 					if (docVal instanceof DBObject) {
 						if (field.getType().getAnnotation(Document.class) != null) {
-							// getFieldSetterMethod(po, field).invoke(po,
-							// fillDocument2PO((DBObject) docVal, (T)
-							// field.getType().newInstance()));
 							field.set(po, fillDocument2PO((DBObject) docVal, (T) field.getType().newInstance()));
 						} else {
 							if (docVal instanceof BasicDBList) {
@@ -154,17 +145,13 @@ public class DBObjectUtil {
 										list.addAll((Collection) docVal);
 										field.set(po, list);
 									}
-									// BeanUtils.setProperty(po,
-									// field.getName(), docVal);
 								} else {
 									field.set(po, docVal);
 								}
 							}
-							// docVal);
 						}
 					} else {
 						BeanUtils.setProperty(po, field.getName(), docVal);
-						// field.set(po, docVal);
 					}
 				} catch (IllegalArgumentException e) {
 					e.printStackTrace();

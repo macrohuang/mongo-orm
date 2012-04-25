@@ -331,10 +331,10 @@ public class MongoDBTemplate {
 	/**
 	 * Query with a query object. The <code>query</code> must be given a class
 	 * of a PO Object with
-	 * {@link github.macrohuang.orm.mongo.annotation.Document} annotation.
+	 * {@link com.sogou.bizdev.mongo.orm.annotation.Document} annotation.
 	 * 
 	 * @see MongoDBTemplate#findByExample(Object)
-	 * @see github.macrohuang.orm.mongo.annotation.Document
+	 * @see com.sogou.bizdev.mongo.orm.annotation.Document
 	 * @param <T>
 	 * @param query
 	 * @return A page instance fill with the query result, including the
@@ -356,8 +356,7 @@ public class MongoDBTemplate {
 	 */
 	public <T> int getCount(Query query) {
 		Assert.assertNotNull(query);
-		DBCursor cursor = getCollection(query.getQueryPOClass()).find(query.buildQuery());
-		return (cursor == null ? 0 : cursor.count());
+		return getCountInner(getCollection(query.getQueryPOClass()), query);
 	}
 
 	/**
@@ -372,12 +371,25 @@ public class MongoDBTemplate {
 	public <T> int getCount(DBChooser chooser, Query query) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(chooser);
-		DBCursor cursor = getCollection(chooser).find(query.buildQuery());
-		return (cursor == null ? 0 : cursor.count());
+		return getCountInner(getCollection(chooser), query);
 	}
 
+	private <T> int getCountInner(DBCollection collection, Query query) {
+		DBCursor dbCursor = null;
+		if (query.getProjection() != null) {
+			dbCursor = collection.find(query.buildQuery(), query.getProjection());
+		} else {
+			dbCursor = collection.find(query.buildQuery());
+		}
+		return dbCursor == null ? 0 : dbCursor.count();
+	}
 	private <T> Page<T> queryInner(DBCollection collection, Query query) {
-		DBCursor cursor = collection.find(query.buildQuery());
+		DBCursor cursor = null;
+		if (query.getProjection() != null) {
+			cursor = collection.find(query.buildQuery(), query.getProjection());
+		} else {
+			cursor = collection.find(query.buildQuery());
+		}
 		if (query.getOrderMap() != null) {
 			cursor.sort(query.getOrderMap());
 		}
@@ -385,9 +397,6 @@ public class MongoDBTemplate {
 			cursor.limit(query.getMax());
 		} else if (query.getPageSize() > 0) {
 			cursor.skip(query.getPageNum() * query.getPageSize());
-		}
-		if (query.getProjection() != null) {
-			cursor.addSpecial("$returnKey", query.getProjection());
 		}
 		return fillPage(query, cursor);
 	}
@@ -421,16 +430,16 @@ public class MongoDBTemplate {
 
 	/**
 	 * Save an entry to the DB.<b>Note:</b> the class of given entry must be
-	 * annotated by a {@link github.macrohuang.orm.mongo.annotation.Document}
+	 * annotated by a {@link com.sogou.bizdev.mongo.orm.annotation.Document}
 	 * annotation, and only those fields of the given class annotated by
-	 * {@link github.macrohuang.orm.mongo.annotation.MongoField} will be mapped
+	 * {@link com.sogou.bizdev.mongo.orm.annotation.MongoField} will be mapped
 	 * to the collection.
 	 * 
 	 * @param <T>
 	 * @param entry
 	 *            An POJO annotated by a
-	 *            {@link github.macrohuang.orm.mongo.annotation.Document} and
-	 *            some {@link github.macrohuang.orm.mongo.annotation.MongoField}
+	 *            {@link com.sogou.bizdev.mongo.orm.annotation.Document} and
+	 *            some {@link com.sogou.bizdev.mongo.orm.annotation.MongoField}
 	 *            .
 	 * @return The result of save action.<code>true</code> for success, while
 	 *         <code>false</code> for fail.

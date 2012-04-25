@@ -10,8 +10,14 @@
 	<bean parent="dataSourceFactory">
 		 <property name="config">
 			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
-				<property name="host" value="dev01.mymongo" />
-				<property name="port" value="8888" />
+				<!-- <property name="host" value="dev01.mymongo" />
+				<property name="port" value="8888" />-->
+				<property name="replicaSetSeeds">
+					<set>
+						<value>10.11.203.55:6666</value>
+						<value>10.11.203.55:6667</value>
+					</set>
+				</property>
 				<property name="username" value="write" />
 				<property name="password" value="write" />
 				<property name="needAuth" value="true" />

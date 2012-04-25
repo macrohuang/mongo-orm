@@ -17,6 +17,11 @@
 				<property name="needAuth" value="true" />
 			</bean>
 		</property>
+		<property name="include">
+			<set>
+				<value>CPCREPORT_2012</value>
+			</set>
+		</property>
 	</bean>
 
 	<bean id="dataSourceFactory2" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
@@ -28,6 +33,11 @@
 				<property name="password" value="write" />
 				<property name="needAuth" value="true" />
 			</bean>
+		</property>
+		<property name="include">
+			<set>
+				<value>test</value>
+			</set>
 		</property>
 	</bean>
 	

@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 
 public class MongoDBTemplateTest extends BaseTest {
-	private static final Logger LOGGER = Logger.getLogger(MongoDBTemplate.class);
+	private static final Logger LOGGER = Logger.getLogger(MongoDBTemplateTest.class);
 	@Test
 	public void testFindByExample() {
 		TestPO examplePo = new TestPO();
@@ -33,7 +33,7 @@ public class MongoDBTemplateTest extends BaseTest {
 		cpcIdea.setId(328695107L);
 		// examplePo.setId("1234_1335020510874");
 		long time = System.currentTimeMillis();
-		LOGGER.info(template.findByExample(DBChooser.getDbAndCollection("CPCREPORT_2012", "CPCIDEA"), cpcIdea).toString());
+		LOGGER.info(template.findByExample(DBChooser.getDbAndCollection("idea2012", "idea"), cpcIdea).toString());
 		LOGGER.info("cost:" + (System.currentTimeMillis() - time));
 	}
 
@@ -54,14 +54,14 @@ public class MongoDBTemplateTest extends BaseTest {
 
 	@Test
 	public void testQuery() {
-		Query query = new Query(TestPO.class).addCondition("id", QueryOperators.EQ, "1234_1335020510874").include("id").include("accountId");
+		Query query = new Query(TestPO.class).addCondition("id", QueryOperators.EQ, "1234_1335336475050");
 		LOGGER.info(template.query(query));
 	}
 
 	@Test
 	public void testQuery2() {
 		Query query = new Query(CpcIdea.class).addCondition("accountId", QueryOperators.EQ, 8764L).addCondition("id", QueryOperators.EQ, 328695107L);
-		LOGGER.info(template.query(DBChooser.getDbAndCollection("CPCREPORT_2012", "CPCIDEA"), query));
+		LOGGER.info(template.query(DBChooser.getDbAndCollection("idea2012", "idea"), query));
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public class MongoDBTemplateTest extends BaseTest {
 
 	@Test
 	public void testGetCountByExample() {
-		LOGGER.info(template.getCountByExample(DBChooser.getDbAndCollection("CPCREPORT_2012", "CPCIDEA"), new CpcIdea()));
+		LOGGER.info(template.getCountByExample(DBChooser.getDbAndCollection("idea2012", "idea"), new CpcIdea()));
 
 	}
 

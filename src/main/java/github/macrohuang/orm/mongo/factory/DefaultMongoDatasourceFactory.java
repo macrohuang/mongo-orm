@@ -2,8 +2,10 @@ package github.macrohuang.orm.mongo.factory;
 
 import github.macrohuang.orm.mongo.config.MongoConfig;
 
-public class DefaultMongoDatasourceFactory extends AbstractMongoDatasourceFactory {
+import org.apache.log4j.Logger;
 
+public class DefaultMongoDatasourceFactory extends AbstractMongoDatasourceFactory {
+	private static final Logger logger = Logger.getLogger(DefaultMongoDatasourceFactory.class);
 	public DefaultMongoDatasourceFactory() {
 	}
 	public DefaultMongoDatasourceFactory(MongoConfig config) {
@@ -12,6 +14,7 @@ public class DefaultMongoDatasourceFactory extends AbstractMongoDatasourceFactor
 
 	@Override
 	public void setConfig(MongoConfig config) {
+		logger.info("config is setted to :" + config);
 		super.config = config;
 	}
 }

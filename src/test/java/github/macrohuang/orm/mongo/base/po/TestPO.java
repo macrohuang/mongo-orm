@@ -15,7 +15,7 @@ public class TestPO implements Serializable {
      */
 	private static final long serialVersionUID = -975960716165479997L;
 
-	@MongoField(field = "_id")
+	@MongoField
 	private String id;
 
 	@MongoField(field = "accountid")

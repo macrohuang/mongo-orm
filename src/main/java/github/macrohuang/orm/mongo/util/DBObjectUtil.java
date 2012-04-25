@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
@@ -25,26 +26,32 @@ import com.mongodb.DBObject;
 
 public class DBObjectUtil {
 	private static final Map<String, Field[]> FIELD_CACHE_MAP = new ConcurrentHashMap<String, Field[]>();
+	private static final Logger logger = Logger.getLogger(DBObjectUtil.class);
 
 	public static DBObject convertPO2DBObject(Object object) throws MongoDBMappingException {
+		logger.info("convert " + object + " into DBObject");
 		return convertPO2DBObject(object, 1);
 	}
 
 	public static DBObject convertPO2DBObject(Object object, int deepth) throws MongoDBMappingException {
+		logger.info("convert " + object + " into DBObject with deepth: " + deepth);
 		return convertPO2DBObjectInner(object, false, deepth, 0);
 	}
 
 	public static DBObject convertPO2DBObject(Object object, boolean nullable, int deepth) throws MongoDBMappingException {
+		logger.info("convert " + object + " into DBObject with deepth: " + deepth + ", enable null value: " + nullable);
 		return convertPO2DBObjectInner(object, nullable, deepth, 0);
 	}
 
 	public static Method getFieldGetterMethod(Object object, Field field) throws SecurityException, NoSuchMethodException {
+		logger.info("get " + object + " 's Field: " + field);
 		StringBuilder getterMethod = new StringBuilder();
 		getterMethod.append("get").append(("" + field.getName().charAt(0)).toUpperCase()).append(field.getName().substring(1));
 		return object.getClass().getMethod(getterMethod.toString(), new Class[0]);
 	}
 
 	public static String getMongoField(Field field) {
+		logger.info("get " + field + " 's MongoField");
 		MongoField mongoField = field.getAnnotation(MongoField.class);
 		return StringUtils.hasText(mongoField.field()) ? mongoField.field() : field.getName();
 	}
@@ -108,6 +115,7 @@ public class DBObjectUtil {
 	public static <T> T fillDocument2PO(DBObject dbObject, T po) {
 		if (po == null)
 			throw new MongoDBMappingException("can't not fill a document into a null po.");
+		logger.info("Fill DBObject:" + dbObject + " into Type:" + po);
 		// if (po.getClass().getAnnotation(Document.class) == null) {
 		// throw new
 		// MongoDBMappingException("can't not fill a document into a non document po.");
@@ -173,6 +181,7 @@ public class DBObjectUtil {
 				} catch (InvocationTargetException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					throw new MongoDBMappingException("can not set the field value.", e);
 				}
 			}
 		}

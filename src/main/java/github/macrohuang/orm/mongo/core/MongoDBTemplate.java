@@ -27,6 +27,7 @@ import github.macrohuang.orm.mongo.util.DBObjectUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
@@ -58,6 +59,7 @@ import com.mongodb.WriteResult;
 public class MongoDBTemplate {
 	private MongoDBFactory dbFactory;
 	private int batchSize = 1000;
+	private static final Logger LOGGER = Logger.getLogger(MongoDBTemplate.class);
 
 	/**
 	 * Delete documents match the given <code>entry</code> with manual specify
@@ -76,8 +78,11 @@ public class MongoDBTemplate {
 	 */
 	public <T> boolean delete(DBChooser dbChooser, T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
+		LOGGER.info("delete request received: " + dbChooser + entry);
 		DBCollection collection = getCollection(dbChooser);
-		return returnResult(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
+		boolean result = returnResult(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
+		LOGGER.info("delete result: " + result);
+		return result;
 	}
 
 	/**
@@ -95,8 +100,11 @@ public class MongoDBTemplate {
 	 */
 	public <T> boolean delete(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
+		LOGGER.info("delete request received: " + entry);
 		DBCollection collection = getCollection(entry);
-		return returnResult(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
+		boolean result = returnResult(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
+		LOGGER.info("delete result: " + result);
+		return result;
 	}
 
 	/**
@@ -138,10 +146,12 @@ public class MongoDBTemplate {
 	}
 
 	private <T> boolean deleteAllInner(List<T> entrys, DBCollection collection) {
+		LOGGER.info("delete all request received:" + entrys + "," + collection);
 		boolean result = true;
 		for (T entry : entrys) {
 			result &= returnResult(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
 		}
+		LOGGER.info("delete result:" + result);
 		return result;
 	}
 
@@ -184,6 +194,7 @@ public class MongoDBTemplate {
 	public <T> List<T> findByExample(DBChooser dbChooser, T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
 		Assert.assertNotNull(dbChooser);
+		LOGGER.info("Find by example request receive:" + dbChooser + "," + entry);
 		return findByExampleInner(getCollection(dbChooser), entry);
 	}
 
@@ -206,6 +217,7 @@ public class MongoDBTemplate {
 	 */
 	public <T> List<T> findByExample(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
+		LOGGER.info("Find by example request receive:" + entry);
 		return findByExampleInner(getCollection(entry), entry);
 	}
 
@@ -220,6 +232,7 @@ public class MongoDBTemplate {
 	 */
 	public <T> int getCountByExample(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
+		LOGGER.info("getCountByExample request receive:" + entry);
 		DBCursor dbCursor = getCollection(entry).find(DBObjectUtil.convertPO2DBObject(entry));
 		return dbCursor == null ? 0 : dbCursor.count();
 	}
@@ -311,6 +324,7 @@ public class MongoDBTemplate {
 	public <T> Page<T> query(DBChooser dbChooser, Query query) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(dbChooser);
+		LOGGER.info("query receive:" + dbChooser + "," + query);
 		return queryInner(getCollection(dbChooser), query);
 	}
 
@@ -328,6 +342,7 @@ public class MongoDBTemplate {
 	 */
 	public <T> Page<T> query(Query query) {
 		Assert.assertNotNull(query);
+		LOGGER.info("query receive:" + query);
 		return queryInner(getCollection(query.getQueryPOClass()), query);
 	}
 
@@ -399,6 +414,7 @@ public class MongoDBTemplate {
 	public <T> boolean save(DBChooser dbChooser, T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
 		Assert.assertNotNull(dbChooser);
+		LOGGER.info("Save request received:" + dbChooser + "," + entry);
 		DBCollection collection = getCollection(dbChooser);
 		return returnResult(collection.insert(DBObjectUtil.convertPO2DBObject(entry)));
 	}
@@ -422,6 +438,7 @@ public class MongoDBTemplate {
 	 */
 	public <T> boolean save(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
+		LOGGER.info("Save request received:" + entry);
 		DBCollection collection = getCollection(entry);
 		return returnResult(collection.insert(DBObjectUtil.convertPO2DBObject(entry)));
 	}
@@ -441,6 +458,7 @@ public class MongoDBTemplate {
 		Assert.assertNotNull(entrys);
 		Assert.assertNotNull(dbChooser);
 		Assert.assertNotEmpty(entrys);
+		LOGGER.info("saveAll request received:" + dbChooser + "," + entrys);
 		return saveAllInner(getCollection(dbChooser), entrys);
 	}
 
@@ -456,6 +474,7 @@ public class MongoDBTemplate {
 	public <T> boolean saveAll(List<T> entrys) throws MongoDataAccessException {
 		Assert.assertNotNull(entrys);
 		Assert.assertNotEmpty(entrys);
+		LOGGER.info("saveAll request received:" + entrys);
 		return saveAllInner(getCollection(entrys.get(0)), entrys);
 	}
 
@@ -493,6 +512,7 @@ public class MongoDBTemplate {
 	public <T> boolean update(DBChooser dbChooser, Query query, T entry) {
 		Assert.assertNotNull(dbChooser);
 		Assert.assertNotNull(query);
+		LOGGER.info("update:" + dbChooser + "," + query + "," + entry);
 		Assert.assertNotNull(entry);
 		return update(dbChooser, query, entry, true, true);
 	}
@@ -514,6 +534,7 @@ public class MongoDBTemplate {
 	public <T> boolean update(DBChooser dbChooser, Query query, T entry, boolean upsert, boolean multi) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(dbChooser);
+		LOGGER.info("update:" + dbChooser + ",query:" + query + ",entry:" + entry + ",upsert:" + upsert + ",multi:" + multi);
 		DBCollection collection = getCollection(dbChooser);
 		return returnResult(collection.update(query.buildQuery(), new BasicDBObject("$set", DBObjectUtil.convertPO2DBObject(entry)), upsert, multi));
 	}
@@ -530,6 +551,7 @@ public class MongoDBTemplate {
 	public <T> boolean update(Query query, T entry) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(entry);
+		LOGGER.info("update:" + ",query:" + query + ",entry:" + entry);
 		return update(query, entry, true, true);
 	}
 
@@ -547,6 +569,7 @@ public class MongoDBTemplate {
 	public <T> boolean update(Query query, T entry, boolean upsert, boolean multi) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(entry);
+		LOGGER.info("update:" + ",query:" + query + ",entry:" + entry + ",upsert:" + upsert + ",multi:" + multi);
 		DBCollection collection = getCollection(query.getQueryPOClass());
 		return returnResult(collection.update(query.buildQuery(), new BasicDBObject("$set", DBObjectUtil.convertPO2DBObject(entry)), upsert, multi));
 	}

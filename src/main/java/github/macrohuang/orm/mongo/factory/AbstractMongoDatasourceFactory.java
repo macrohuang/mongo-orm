@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.mongodb.Mongo;
@@ -17,6 +18,7 @@ public abstract class AbstractMongoDatasourceFactory implements InitializingBean
 	protected MongoConfig config;
 	private Mongo mongo;
 	private Set<String> include;
+	private static final Logger logger = Logger.getLogger(AbstractMongoDatasourceFactory.class);
 
 	public AbstractMongoDatasourceFactory() {
 	}
@@ -56,9 +58,11 @@ public abstract class AbstractMongoDatasourceFactory implements InitializingBean
 	public void afterPropertiesSet() throws Exception {
 		if (config.getReplicaSetSeeds() != null && config.getReplicaSetSeeds().size() > 0) {// Replcate
 			// set.
+			logger.info("it's a replecate set config" + config.getReplicaSetSeeds());
 			List<ServerAddress> serverAddresses = getServerAddresses(config.getReplicaSetSeeds());
 			mongo = new Mongo(serverAddresses, config);
 		} else {
+			logger.info("it's single server config" + config.getHost() + ":" + config.getPort());
 			mongo = new Mongo(new ServerAddress(config.getHost(), config.getPort()), config);
 		}
 	}

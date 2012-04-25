@@ -31,4 +31,9 @@ public final class DBChooser {
 	public String getCollection() {
 		return collection;
 	}
+
+	@Override
+	public String toString() {
+		return "DBChooser [db=" + db + ", collection=" + collection + "]";
+	}
 }

@@ -128,4 +128,11 @@ public class Query {
 		}
 		return this;
 	}
+
+	@Override
+	public String toString() {
+		return "Query [class1=" + class1 + ", queryObject=" + queryObject + ", orderMap=" + orderMap + ", skip=" + skip + ", pageSize=" + pageSize
+				+ ", pageNum=" + pageNum + ", max=" + max + ", projection=" + projection + "]";
+	}
+
 }

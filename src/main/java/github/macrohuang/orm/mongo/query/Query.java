@@ -44,7 +44,7 @@ public class Query {
 	public Query include(String field){
 		if (projection == null)
 			projection = new BasicDBObject();
-		projection.put(field, 1);
+		projection.put(getDocumentField(field), 1);
 		return this;
 	}
 	public Query addCondition(String field, QueryOperators operators, Object value) {

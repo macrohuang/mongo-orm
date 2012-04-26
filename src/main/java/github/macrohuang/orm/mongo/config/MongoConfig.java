@@ -76,6 +76,18 @@ public class MongoConfig extends MongoOptions{
 		super.threadsAllowedToBlockForConnectionMultiplier = maxConnections / super.connectionsPerHost;
 	}
 
+	public void setMaxWaitTime(int maxWaitTime) {
+		super.maxWaitTime = maxWaitTime;
+	}
+
+	public void setAutoConnectRetry(boolean autoConnectRetry) {
+		super.autoConnectRetry = autoConnectRetry;
+	}
+
+	public void setmaxAutoConnectRetryTime(long maxAutoConnectRetryTime) {
+		super.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
+	}
+
 	@Override
 	public String toString() {
 		return "MongoConfig [host=" + host + ", port=" + port + ", needAuth=" + needAuth + ", username=" + username + ", password=" + password

@@ -17,9 +17,9 @@
       </property>
     </bean>
 	
-	<bean id="dataSourceFactory1" class="com.sogou.bizdev.mongo.orm.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
+	<bean id="dataSourceFactory1" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
 		 <property name="config">
-			<bean class="com.sogou.bizdev.mongo.orm.config.MongoConfig">
+			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
 				<property name="replicaSetSeeds">
 					<set>
 						<value>${xreport01.mongodb.host}:${cpc.mongo.port}</value>
@@ -52,9 +52,9 @@
 		</property>
 	</bean>
 
-	<bean id="dataSourceFactory2" class="com.sogou.bizdev.mongo.orm.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
+	<bean id="dataSourceFactory2" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
 		 <property name="config">
-			<bean class="com.sogou.bizdev.mongo.orm.config.MongoConfig">
+			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
 				<property name="replicaSetSeeds">
 					<set>
 						<value>${xreport01.mongodb.host}:${idea.mongo.port}</value>

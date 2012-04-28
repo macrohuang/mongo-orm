@@ -7,36 +7,82 @@
 		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
 	
-	<bean id="dataSourceFactory1" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
+   <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"> 
+      <property name="order" value="1" />  
+      <property name="ignoreUnresolvablePlaceholders" value="true" />
+      <property name="locations"> 
+          <list> 
+              <value>classpath:mongodb-conf.properties</value>
+          </list> 
+      </property>
+    </bean>
+	
+	<bean id="dataSourceFactory1" class="com.sogou.bizdev.mongo.orm.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
 		 <property name="config">
-			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
-				<property name="host" value="dev01.mymongo" />
-				<property name="port" value="8888" />
-				<property name="username" value="write" />
-				<property name="password" value="write" />
-				<property name="needAuth" value="true" />
+			<bean class="com.sogou.bizdev.mongo.orm.config.MongoConfig">
+				<property name="replicaSetSeeds">
+					<set>
+						<value>${xreport01.mongodb.host}:${cpc.mongo.port}</value>
+						<value>${xreport02.mongodb.host}:${cpc.mongo.port}</value>
+						<value>${xreport03.mongodb.host}:${cpc.mongo.port}</value>
+					</set>
+				</property>
+				<property name="username" >
+					<value>${cpc.mongo.username}</value>
+				</property>
+				<property name="password">
+					<value>${cpc.mongo.password}</value>
+				</property>
+				<property name="needAuth">
+					<value>${cpc.mongo.needAuth}</value>
+				</property>
+				<property name="poolSize">
+					<value>${cpc.mongo.poolSize}</value>
+				</property>
+				<property name="maxConnections">
+					<value>${cpc.mongo.maxConnections}</value>
+				</property>
 			</bean>
 		</property>
 		<property name="include">
 			<set>
-				<value>CPCREPORT_2012</value>
+				<value>${cpc.mongo.include.1}</value>
+				<value>${cpc.mongo.include.2}</value>
 			</set>
 		</property>
 	</bean>
 
-	<bean id="dataSourceFactory2" class="github.macrohuang.orm.mongo.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
+	<bean id="dataSourceFactory2" class="com.sogou.bizdev.mongo.orm.factory.DefaultMongoDatasourceFactory" destroy-method="destory">
 		 <property name="config">
-			<bean class="github.macrohuang.orm.mongo.config.MongoConfig">
-				<property name="host" value="dev02.mymongo" />
-				<property name="port" value="6666" />
-				<property name="username" value="write" />
-				<property name="password" value="write" />
-				<property name="needAuth" value="true" />
+			<bean class="com.sogou.bizdev.mongo.orm.config.MongoConfig">
+				<property name="replicaSetSeeds">
+					<set>
+						<value>${xreport01.mongodb.host}:${idea.mongo.port}</value>
+						<value>${xreport02.mongodb.host}:${idea.mongo.port}</value>
+						<value>${xreport03.mongodb.host}:${idea.mongo.port}</value>
+					</set>
+				</property>
+				<property name="username" >
+					<value>${idea.mongo.username}</value>
+				</property>
+				<property name="password">
+					<value>${idea.mongo.password}</value>
+				</property>
+				<property name="needAuth">
+					<value>${idea.mongo.needAuth}</value>
+				</property>
+				<property name="poolSize">
+					<value>${idea.mongo.poolSize}</value>
+				</property>
+				<property name="maxConnections">
+					<value>${idea.mongo.maxConnections}</value>
+				</property>
 			</bean>
 		</property>
 		<property name="include">
 			<set>
-				<value>test</value>
+				<value>${idea.mongo.include.1}</value>
+				<value>${idea.mongo.include.2}</value>
 			</set>
 		</property>
 	</bean>

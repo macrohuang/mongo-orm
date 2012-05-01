@@ -1,7 +1,7 @@
 package github.macrohuang.orm.mongo.query;
 
 import github.macrohuang.orm.mongo.annotation.MongoField;
-import github.macrohuang.orm.mongo.exception.MongoDataAccessException;
+import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
 import github.macrohuang.orm.mongo.util.DBObjectUtil;
 
 import java.lang.reflect.Field;
@@ -76,7 +76,7 @@ public class Query {
 
 	private String getDocumentField(String field) {
 		if (poField2DocumentMap.get(class1.getName()) == null || poField2DocumentMap.get(class1.getName()).get(field) == null)
-			throw new MongoDataAccessException("Unmapped field:" + field);
+			throw new MongoDBMappingException("Unmapped field:" + field);
 	    return poField2DocumentMap.get(class1.getName()).get(field);
     }
 

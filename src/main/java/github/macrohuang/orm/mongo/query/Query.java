@@ -1,6 +1,7 @@
 package github.macrohuang.orm.mongo.query;
 
 import github.macrohuang.orm.mongo.annotation.MongoField;
+import github.macrohuang.orm.mongo.exception.MongoDataAccessException;
 import github.macrohuang.orm.mongo.util.DBObjectUtil;
 
 import java.lang.reflect.Field;
@@ -49,7 +50,7 @@ public class Query {
 	}
 	public Query addCondition(String field, QueryOperators operators, Object value) {
 		if (operators == QueryOperators.EQ) {
-			queryObject.put(poField2DocumentMap.get(class1.getName()).get(field), value);
+			queryObject.put(getDocumentField(field), value);
 		} else {
 			if (queryObject.get(getDocumentField(field)) != null) {
 				((BasicDBObject) queryObject.get(getDocumentField(field))).put(operators.getOperate(), value);
@@ -74,13 +75,15 @@ public class Query {
 	}
 
 	private String getDocumentField(String field) {
+		if (poField2DocumentMap.get(class1.getName()) == null || poField2DocumentMap.get(class1.getName()).get(field) == null)
+			throw new MongoDataAccessException("Unmapped field:" + field);
 	    return poField2DocumentMap.get(class1.getName()).get(field);
     }
 
 	public Query addOrder(String field, Order order) {
 		if (orderMap == null)
 			orderMap = new BasicDBObject();
-		orderMap.put(poField2DocumentMap.get(class1.getName()).get(field), order.getOrder());
+		orderMap.put(getDocumentField(field), order.getOrder());
 		return this;
 	}
 

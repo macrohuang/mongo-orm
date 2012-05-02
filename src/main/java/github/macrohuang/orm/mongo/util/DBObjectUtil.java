@@ -166,7 +166,6 @@ public class DBObjectUtil {
 					e.printStackTrace();
 					throw new MongoDBMappingException("can not instance complex property.", e);
 				} catch (InvocationTargetException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					throw new MongoDBMappingException("can not set the field value.", e);
 				}

@@ -2,6 +2,7 @@ package github.macrohuang.orm.mongo.util;
 
 
 import github.macrohuang.orm.mongo.annotation.Document;
+import github.macrohuang.orm.mongo.annotation.Embed;
 import github.macrohuang.orm.mongo.annotation.MongoField;
 import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
 
@@ -11,12 +12,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.log4j.Logger;
@@ -27,7 +25,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 public class DBObjectUtil {
-	private static final Map<String, Map<String, Field>> FIELD_CACHE_MAP = new ConcurrentHashMap<String, Map<String, Field>>();
+	private static final FieldCacheMap FIELD_CACHE_MAP = new FieldCacheMap();
 	private static final Logger logger = Logger.getLogger(DBObjectUtil.class);
 
 	public static DBObject convertPO2DBObject(Object object) throws MongoDBMappingException {
@@ -60,7 +58,7 @@ public class DBObjectUtil {
 		if (object == null || currentDepth == deepth) {
 			return new BasicDBObject();
 		}
-		Map<String, Field> fields = getFieldMap(object);
+		FIELD_CACHE_MAP.addPo(object);
 		DBObject dbObject;
 		if (object instanceof Collection) {
 			dbObject = new BasicDBList();
@@ -68,12 +66,20 @@ public class DBObjectUtil {
 			dbObject = new BasicDBObject();
 		}
 		Field field;
-		for (String docKey : fields.keySet()) {
-			field = fields.get(docKey);
+		for (String docKey : FIELD_CACHE_MAP.getAllMongoField(object)) {
+			field = FIELD_CACHE_MAP.getPoField(object, docKey);
 			field.setAccessible(true);
 			try {
 				if (field.getType().getAnnotation(Document.class) != null) {
 					dbObject.put(docKey, convertPO2DBObjectInner(field.get(object), nullable, deepth, currentDepth + 1));
+				} else if (field.getAnnotation(Embed.class) != null) {// Embed
+																		// document.
+					Embed embed = field.getAnnotation(Embed.class);
+					if (!dbObject.containsField(embed.parent())) {
+						dbObject.put(embed.parent(), new BasicDBObject());
+					}
+					DBObject embedObject = (BasicDBObject) dbObject.get(embed.parent());
+					embedObject.put(docKey, field.get(object));
 				} else {
 					if (nullable || !nullable && field.get(object) != null) {
 						dbObject.put(docKey, field.get(object));
@@ -100,28 +106,15 @@ public class DBObjectUtil {
 		return object.getClass().getMethod(getterMethod.toString(), field.getType());
 	}
 
-	private static <T> Map<String, Field> getFieldMap(T po) {
-		Map<String, Field> fields = FIELD_CACHE_MAP.get(po.getClass().getName());
-		if (fields == null) {
-			fields = new HashMap<String, Field>();
-			for (Field field : po.getClass().getDeclaredFields()) {
-				if (field.getAnnotation(MongoField.class) != null) {
-					fields.put(getMongoField(field), field);
-				}
-			}
-			FIELD_CACHE_MAP.put(po.getClass().getName(), fields);
-		}
-		return fields;
-	}
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> T fillDocument2PO(DBObject dbObject, T po) {
 		if (po == null)
 			throw new MongoDBMappingException("can't not fill a document into a null po.");
-		Map<String, Field> fields = getFieldMap(po);
+		FIELD_CACHE_MAP.addPo(po);
 		Field field;
 		for (String mongoField : dbObject.keySet()) {
-			if (fields.containsKey(mongoField)) {
-				field = fields.get(mongoField);
+			if (FIELD_CACHE_MAP.isPoField(po, mongoField)) {
+				field = FIELD_CACHE_MAP.getPoField(po, mongoField);
 				try {
 					field.setAccessible(true);
 					Object docVal = dbObject.get(mongoField);
@@ -169,6 +162,8 @@ public class DBObjectUtil {
 					e.printStackTrace();
 					throw new MongoDBMappingException("can not set the field value.", e);
 				}
+			} else if (FIELD_CACHE_MAP.isEmbed(po, mongoField) && dbObject.get(mongoField) instanceof DBObject) {
+				return fillDocument2PO((DBObject) dbObject.get(mongoField), po);
 			}
 		}
 		return po;

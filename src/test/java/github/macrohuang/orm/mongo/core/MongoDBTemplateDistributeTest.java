@@ -23,7 +23,7 @@ public class MongoDBTemplateDistributeTest extends DistributeBaseTest {
 		cpcIdea.setAccountId(8764L);
 		cpcIdea.setId(328695107L);
 		long time = System.currentTimeMillis();
-		LOGGER.info(template.findByExample(DBChooser.getDbAndCollection("CPCREPORT_2012", "CPCIDEA"), cpcIdea).toString());
+		LOGGER.info(template.findByExample(DBChooser.getDbAndCollection("CPCREPORT_2012", "CPCIDEA"), cpcIdea));
 		LOGGER.info("cost:" + (System.currentTimeMillis() - time));
 	}
 }

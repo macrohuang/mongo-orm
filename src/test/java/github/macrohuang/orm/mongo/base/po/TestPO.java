@@ -4,9 +4,13 @@ import github.macrohuang.orm.mongo.annotation.Document;
 import github.macrohuang.orm.mongo.annotation.MongoField;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 @Document(db = "test", collection = "test")
 public class TestPO implements Serializable {
@@ -40,11 +44,6 @@ public class TestPO implements Serializable {
 		return desc3;
 	}
 
-	@Override
-	public String toString() {
-		return "TestPO [id=" + id + ", accountId=" + accountId + ", groupId=" + groupId + ", groupName=" + groupName + ", descs="
-		        + Arrays.toString(descs) + ", descs2=" + descs2 + ", desc3=" + desc3 + "]";
-	}
 
 	public void setDesc3(List<String> desc3) {
 		this.desc3 = desc3;
@@ -98,14 +97,22 @@ public class TestPO implements Serializable {
 		this.descs = descs;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		return super.equals(obj);
-	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		return HashCodeBuilder.reflectionHashCode(this);
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return EqualsBuilder.reflectionEquals(this, obj);
+	}
+
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+	}
+
 
 }

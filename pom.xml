@@ -57,5 +57,11 @@
 			<artifactId>mongo-java-driver</artifactId>
 			<version>2.7.3-patch</version>
 		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.5</version>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 </project>

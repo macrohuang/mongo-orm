@@ -1,9 +1,7 @@
 package github.macrohuang.orm.mongo.core;
 
 import github.macrohuang.orm.mongo.base.BaseTest;
-import github.macrohuang.orm.mongo.base.po.CpcIdea;
 import github.macrohuang.orm.mongo.base.po.TestPO;
-import github.macrohuang.orm.mongo.config.DBChooser;
 import github.macrohuang.orm.mongo.query.Query;
 import github.macrohuang.orm.mongo.query.QueryOperators;
 import github.macrohuang.orm.mongo.util.DBObjectUtil;
@@ -27,17 +25,6 @@ public class MongoDBTemplateTest extends BaseTest {
 	}
 
 	@Test
-	public void testFindByExample2() {
-		CpcIdea cpcIdea = new CpcIdea();
-		cpcIdea.setAccountId(8764L);
-		cpcIdea.setId(328695107L);
-		// examplePo.setId("1234_1335020510874");
-		long time = System.currentTimeMillis();
-		LOGGER.info(template.findByExample(DBChooser.getDbAndCollection("idea2012", "idea"), cpcIdea).toString());
-		LOGGER.info("cost:" + (System.currentTimeMillis() - time));
-	}
-
-	@Test
 	public void testSave() {
 		TestPO testPO = new TestPO();
 		testPO.setAccountId(1234L);
@@ -56,12 +43,6 @@ public class MongoDBTemplateTest extends BaseTest {
 	public void testQuery() {
 		Query query = new Query(TestPO.class).addCondition("id", QueryOperators.EQ, "1234_1335336475050");
 		LOGGER.info(template.query(query));
-	}
-
-	@Test
-	public void testQuery2() {
-		Query query = new Query(CpcIdea.class).addCondition("accountId", QueryOperators.EQ, 8764L).addCondition("id", QueryOperators.EQ, 328695107L);
-		LOGGER.info(template.query(DBChooser.getDbAndCollection("idea2012", "idea"), query));
 	}
 
 	@Test
@@ -100,12 +81,6 @@ public class MongoDBTemplateTest extends BaseTest {
 		testPO.setGroupName("4444");
 		LOGGER.info(template.update(query, testPO, true, false));
 		LOGGER.info(template.query(query));
-	}
-
-	@Test
-	public void testGetCountByExample() {
-		LOGGER.info(template.getCountByExample(DBChooser.getDbAndCollection("idea2012", "idea"), new CpcIdea()));
-
 	}
 
 	public static void main(String[] args) {

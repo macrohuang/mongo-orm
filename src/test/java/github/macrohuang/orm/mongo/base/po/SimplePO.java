@@ -3,6 +3,11 @@ package github.macrohuang.orm.mongo.base.po;
 import github.macrohuang.orm.mongo.annotation.Document;
 import github.macrohuang.orm.mongo.annotation.MongoField;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 @Document(db = "test")
 public class SimplePO {
 	@MongoField
@@ -26,17 +31,7 @@ public class SimplePO {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null)
-			return false;
-		if (obj instanceof SimplePO) {
-			SimplePO simplePO = (SimplePO) obj;
-			return ((field1 == simplePO.getField1() || field1 != null && simplePO.getField1() != null && field1.equals(simplePO.getField1()))
-					&& (field2 == simplePO.getField2() || field2 != null && simplePO.getField2() != null && field2.equals(simplePO.getField2()))
-					&& (field3 == simplePO.getField3() || field3 != null && simplePO.getField3() != null && field3.equals(simplePO.getField3())) && (field4 == simplePO
-					.getField4() || field4 != null && simplePO.getField4() != null && field4.equals(simplePO.getField4())));
-		} else {
-			return false;
-		}
+		return EqualsBuilder.reflectionEquals(this, obj);
 	}
 	public Long getField1() {
 		return field1;
@@ -68,5 +63,14 @@ public class SimplePO {
 
 	public void setField4(Double field4) {
 		this.field4 = field4;
+	}
+	@Override
+	public int hashCode() {
+		return HashCodeBuilder.reflectionHashCode(this);
+	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
 	}
 }

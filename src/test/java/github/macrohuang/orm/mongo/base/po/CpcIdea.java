@@ -2,8 +2,13 @@ package github.macrohuang.orm.mongo.base.po;
 
 import github.macrohuang.orm.mongo.annotation.MongoField;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 public class CpcIdea {
-	@MongoField(field="ID")
+	@MongoField(field = "_id")
 	private Long id;
 	
 	@MongoField(field="ACCOUNTID")
@@ -191,11 +196,17 @@ public class CpcIdea {
 	}
 
 	@Override
-	public String toString() {
-		return "CpcIdea [id=" + id + ", accountId=" + accountId + ", agentId=" + agentId + ", ideaId=" + ideaId + ", idea=" + idea + ", ideaDesc1="
-				+ ideaDesc1 + ", visitURL=" + visitURL + ", showURL=" + showURL + ", cpcGrpName=" + cpcGrpName + ", consume=" + consume
-				+ ", clickCount=" + clickCount + ", position=" + position + ", pv=" + pv + ", date=" + date + ", ctr=" + ctr + ", oldPV=" + oldPV
-				+ ", cpcPlanId=" + cpcPlanId + "]";
+	public int hashCode() {
+		return HashCodeBuilder.reflectionHashCode(this);
 	}
-    
+
+	@Override
+	public boolean equals(Object obj) {
+		return EqualsBuilder.reflectionEquals(this, obj);
+	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+	}
 }

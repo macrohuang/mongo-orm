@@ -1,5 +1,6 @@
 package github.macrohuang.orm.mongo.base.po;
 
+import github.macrohuang.orm.mongo.annotation.Document;
 import github.macrohuang.orm.mongo.annotation.Embed;
 import github.macrohuang.orm.mongo.annotation.MongoField;
 
@@ -8,11 +9,12 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
+@Document(db = "test", collection = "test")
 public class EmbedPO {
 	@MongoField
 	private String name;
 	@MongoField
-	private int age;
+	private Integer age;
 	@MongoField
 	@Embed(parent = "address")
 	private String province;

@@ -1,6 +1,7 @@
 package github.macrohuang.orm.mongo.core;
 
 import github.macrohuang.orm.mongo.base.BaseTest;
+import github.macrohuang.orm.mongo.base.po.EmbedPO;
 import github.macrohuang.orm.mongo.base.po.TestPO;
 import github.macrohuang.orm.mongo.query.Query;
 import github.macrohuang.orm.mongo.query.QueryOperators;
@@ -25,6 +26,13 @@ public class MongoDBTemplateTest extends BaseTest {
 	}
 
 	@Test
+	public void testFindByExampleEmbed() {
+		EmbedPO po = new EmbedPO();
+		po.setProvince("Beijing");
+		LOGGER.info(template.findByExample(po));
+	}
+
+	@Test
 	public void testSave() {
 		TestPO testPO = new TestPO();
 		testPO.setAccountId(1234L);
@@ -40,8 +48,27 @@ public class MongoDBTemplateTest extends BaseTest {
 	}
 
 	@Test
+	public void testSaveEmbed() {
+		EmbedPO po = new EmbedPO("name", 17, "Beijing", "Beijing", "Haidian");
+		template.save(po);
+		Assert.assertEquals(po, template.findByExample(po).get(0));
+	}
+
+	@Test
 	public void testQuery() {
 		Query query = new Query(TestPO.class).addCondition("id", QueryOperators.EQ, "1234_1335336475050");
+		LOGGER.info(template.query(query));
+	}
+
+	@Test
+	public void testQueryEmbed() {
+		Query query = new Query(EmbedPO.class).addCondition("province", QueryOperators.EQ, "Beijing");
+		LOGGER.info(template.query(query));
+	}
+
+	@Test
+	public void testQueryEmbed2() {
+		Query query = new Query(EmbedPO.class).addCondition("name", QueryOperators.EQ, "name");
 		LOGGER.info(template.query(query));
 	}
 
@@ -56,6 +83,14 @@ public class MongoDBTemplateTest extends BaseTest {
 		testPO.setGroupId(2222L);
 		testPO.setGroupName("Group name from update");
 		LOGGER.info(template.update(query, testPO));
+		LOGGER.info(template.query(query));
+	}
+
+	@Test
+	public void testUpdateEmbed() {
+		Query query = new Query(EmbedPO.class).addCondition("province", QueryOperators.EQ, "Beijing");
+		EmbedPO po = new EmbedPO("name", 17, "Beijing", "Beijing", "海淀");
+		LOGGER.info(template.update(query, po));
 		LOGGER.info(template.query(query));
 	}
 

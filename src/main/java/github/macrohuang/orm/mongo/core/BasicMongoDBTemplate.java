@@ -139,9 +139,24 @@ public class BasicMongoDBTemplate {
 		return dbCursor == null ? 0 : dbCursor.count();
 	}
 
+	private DBObject getQueryObject(DBObject qbject) {
+		DBObject queryObject = new BasicDBObject();
+		for (String docKey : qbject.keySet()) {
+			if (qbject.get(docKey) instanceof BasicDBObject) {// Embed
+				DBObject docVal = (DBObject) qbject.get(docKey);
+				for (String embedKey : docVal.keySet()) {
+					queryObject.put(docKey + "." + embedKey, docVal.get(embedKey));
+				}
+			} else {
+				queryObject.put(docKey, qbject.get(docKey));
+			}
+		}
+		return queryObject;
+	}
+
 	@SuppressWarnings("unchecked")
 	protected <T> List<T> findByExampleInner(DBCollection collection, T entry) {
-		DBCursor dbCursor = collection.find(DBObjectUtil.convertPO2DBObject(entry));
+		DBCursor dbCursor = collection.find(getQueryObject(DBObjectUtil.convertPO2DBObject(entry)));
 		dbCursor.batchSize(batchSize);
 		List<T> result = new ArrayList<T>();
 		for (DBObject object : dbCursor) {

@@ -25,7 +25,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 public class DBObjectUtil {
-	private static final FieldCacheMap FIELD_CACHE_MAP = new FieldCacheMap();
+	private static final FieldCacheMap FIELD_CACHE_MAP = FieldCacheMap.getInstance();
 	private static final Logger logger = Logger.getLogger(DBObjectUtil.class);
 
 	public static DBObject convertPO2DBObject(Object object) throws MongoDBMappingException {
@@ -58,7 +58,7 @@ public class DBObjectUtil {
 		if (object == null || currentDepth == deepth) {
 			return new BasicDBObject();
 		}
-		FIELD_CACHE_MAP.addPo(object);
+		FIELD_CACHE_MAP.addIfAbsent(object.getClass());
 		DBObject dbObject;
 		if (object instanceof Collection) {
 			dbObject = new BasicDBList();
@@ -66,8 +66,8 @@ public class DBObjectUtil {
 			dbObject = new BasicDBObject();
 		}
 		Field field;
-		for (String docKey : FIELD_CACHE_MAP.getAllMongoField(object)) {
-			field = FIELD_CACHE_MAP.getPoField(object, docKey);
+		for (String docKey : FIELD_CACHE_MAP.getAllMongoField(object.getClass())) {
+			field = FIELD_CACHE_MAP.getPoField(object.getClass(), docKey);
 			field.setAccessible(true);
 			try {
 				if (field.getType().getAnnotation(Document.class) != null) {
@@ -78,8 +78,11 @@ public class DBObjectUtil {
 					if (!dbObject.containsField(embed.parent())) {
 						dbObject.put(embed.parent(), new BasicDBObject());
 					}
-					DBObject embedObject = (BasicDBObject) dbObject.get(embed.parent());
-					embedObject.put(docKey, field.get(object));
+					if (nullable || !nullable && field.get(object) != null) {
+						((DBObject) dbObject.get(embed.parent())).put(docKey, field.get(object));
+						// dbObject.put(embed.parent() + "." + docKey,
+						// field.get(object));
+					}
 				} else {
 					if (nullable || !nullable && field.get(object) != null) {
 						dbObject.put(docKey, field.get(object));
@@ -110,11 +113,11 @@ public class DBObjectUtil {
 	public static <T> T fillDocument2PO(DBObject dbObject, T po) {
 		if (po == null)
 			throw new MongoDBMappingException("can't not fill a document into a null po.");
-		FIELD_CACHE_MAP.addPo(po);
+		FIELD_CACHE_MAP.addIfAbsent(po.getClass());
 		Field field;
 		for (String mongoField : dbObject.keySet()) {
-			if (FIELD_CACHE_MAP.isPoField(po, mongoField)) {
-				field = FIELD_CACHE_MAP.getPoField(po, mongoField);
+			if (FIELD_CACHE_MAP.isPoField(po.getClass(), mongoField)) {
+				field = FIELD_CACHE_MAP.getPoField(po.getClass(), mongoField);
 				try {
 					field.setAccessible(true);
 					Object docVal = dbObject.get(mongoField);
@@ -163,7 +166,7 @@ public class DBObjectUtil {
 					throw new MongoDBMappingException("can not set the field value.", e);
 				}
 			} else if (FIELD_CACHE_MAP.isEmbed(po, mongoField) && dbObject.get(mongoField) instanceof DBObject) {
-				return fillDocument2PO((DBObject) dbObject.get(mongoField), po);
+				fillDocument2PO((DBObject) dbObject.get(mongoField), po);
 			}
 		}
 		return po;

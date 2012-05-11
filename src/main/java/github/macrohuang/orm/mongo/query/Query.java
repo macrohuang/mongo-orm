@@ -1,12 +1,6 @@
 package github.macrohuang.orm.mongo.query;
 
-import github.macrohuang.orm.mongo.annotation.MongoField;
-import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
-import github.macrohuang.orm.mongo.util.DBObjectUtil;
-
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
+import github.macrohuang.orm.mongo.util.FieldCacheMap;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -16,7 +10,6 @@ public class Query {
 	private Class<?> class1;
 	private DBObject queryObject;
 	private DBObject orderMap;
-	private static Map<String, Map<String, String>> poField2DocumentMap = new HashMap<String, Map<String, String>>();
 	private int skip;
 	private int pageSize;
 	private int pageNum;
@@ -26,36 +19,37 @@ public class Query {
 	public Query(Class<?> class1) {
 		this.class1 = class1;
 		queryObject = new BasicDBObject();
-		if (!poField2DocumentMap.containsKey(class1.getName())) {
-			Map<String, String> fieldMap = new HashMap<String, String>();
-			for (Field field : class1.getDeclaredFields()) {
-				if (field.getAnnotation(MongoField.class) != null) {
-					fieldMap.put(field.getName(), DBObjectUtil.getMongoField(field));
-				}
-			}
-			poField2DocumentMap.put(class1.getName(), fieldMap);
-		}
+		FieldCacheMap.getInstance().addIfAbsent(class1);
 	}
 
 	public Class<?> getQueryPOClass() {
 		return class1;
 	}
 
+	private String getDocKey(String field) {
+		String docKey = FieldCacheMap.getInstance().getFieldDocKey(getQueryPOClass(), field);
+		if (FieldCacheMap.getInstance().isEmbed(getQueryPOClass(), field)) {
+			return FieldCacheMap.getInstance().getEmbedParent(getQueryPOClass(), field) + "." + docKey;
+		} else {
+			return docKey;
+		}
+	}
 	// It now works!!!
 	public Query include(String field){
 		if (projection == null)
 			projection = new BasicDBObject();
-		projection.put(getDocumentField(field), 1);
+		projection.put(getDocKey(field), 1);
 		return this;
 	}
+
 	public Query addCondition(String field, QueryOperators operators, Object value) {
 		if (operators == QueryOperators.EQ) {
-			queryObject.put(getDocumentField(field), value);
+			queryObject.put(getDocKey(field), value);
 		} else {
-			if (queryObject.get(getDocumentField(field)) != null) {
-				((BasicDBObject) queryObject.get(getDocumentField(field))).put(operators.getOperate(), value);
+			if (queryObject.get(getDocKey(field)) != null) {
+				((BasicDBObject) queryObject.get(getDocKey(field))).put(operators.getOperate(), value);
 			} else {
-				queryObject.put(getDocumentField(field), new BasicDBObject(operators.getOperate(), value));
+				queryObject.put(getDocKey(field), new BasicDBObject(operators.getOperate(), value));
 			}
 		}
 		return this;
@@ -70,20 +64,14 @@ public class Query {
 			queryObject.put("$or", new BasicDBList());
 		}
 		BasicDBList object = (BasicDBList) queryObject.get("$or");
-		object.add(new BasicDBObject(getDocumentField(field), value));
+		object.add(new BasicDBObject(getDocKey(field), value));
 		return this;
 	}
-
-	private String getDocumentField(String field) {
-		if (poField2DocumentMap.get(class1.getName()) == null || poField2DocumentMap.get(class1.getName()).get(field) == null)
-			throw new MongoDBMappingException("Unmapped field:" + field);
-	    return poField2DocumentMap.get(class1.getName()).get(field);
-    }
 
 	public Query addOrder(String field, Order order) {
 		if (orderMap == null)
 			orderMap = new BasicDBObject();
-		orderMap.put(getDocumentField(field), order.getOrder());
+		orderMap.put(getDocKey(field), order.getOrder());
 		return this;
 	}
 

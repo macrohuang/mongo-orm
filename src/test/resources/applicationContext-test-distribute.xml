@@ -42,6 +42,9 @@
 				<property name="maxConnections">
 					<value>${cpc.mongo.maxConnections}</value>
 				</property>
+				<property name="readSlave">
+					<value>${cpc.mongo.readSlave}</value>
+				</property>
 			</bean>
 		</property>
 		<property name="include">
@@ -76,6 +79,9 @@
 				</property>
 				<property name="maxConnections">
 					<value>${idea.mongo.maxConnections}</value>
+				</property>
+				<property name="readSlave">
+					<value>${idea.mongo.readSlave}</value>
 				</property>
 			</bean>
 		</property>

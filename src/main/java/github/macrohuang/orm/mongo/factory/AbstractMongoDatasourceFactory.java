@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.mongodb.Mongo;
+import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 
 public abstract class AbstractMongoDatasourceFactory implements InitializingBean {
@@ -61,6 +62,10 @@ public abstract class AbstractMongoDatasourceFactory implements InitializingBean
 			logger.info("it's a replecate set config" + config.getReplicaSetSeeds());
 			List<ServerAddress> serverAddresses = getServerAddresses(config.getReplicaSetSeeds());
 			mongo = new Mongo(serverAddresses, config);
+			if (config.isReadSlave()) {// 20120529,Read from secondary,default
+										// true.
+				mongo.setReadPreference(ReadPreference.SECONDARY);
+			}
 		} else {
 			logger.info("it's single server config" + config.getHost() + ":" + config.getPort());
 			mongo = new Mongo(new ServerAddress(config.getHost(), config.getPort()), config);

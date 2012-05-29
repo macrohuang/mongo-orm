@@ -11,6 +11,7 @@ public class MongoConfig extends MongoOptions{
 	private String username;
 	private String password;
 	private Set<String> replicaSetSeeds;
+	private boolean readSlave = true;
 
 	public Set<String> getReplicaSetSeeds() {
 		return replicaSetSeeds;
@@ -88,9 +89,17 @@ public class MongoConfig extends MongoOptions{
 		super.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
 	}
 
+	public boolean isReadSlave() {
+		return readSlave;
+	}
+
+	public void setReadSlave(boolean readSlave) {
+		this.readSlave = readSlave;
+	}
+
 	@Override
 	public String toString() {
 		return "MongoConfig [host=" + host + ", port=" + port + ", needAuth=" + needAuth + ", username=" + username + ", password=" + password
-				+ ", replicaSetSeeds=" + replicaSetSeeds + "]";
+				+ ", replicaSetSeeds=" + replicaSetSeeds + ", readSlave=" + readSlave + "]";
 	}
 }

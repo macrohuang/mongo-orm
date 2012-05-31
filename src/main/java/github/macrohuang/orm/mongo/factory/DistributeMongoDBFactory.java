@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.mongodb.DB;
+import com.mongodb.ReadPreference;
 
 public class DistributeMongoDBFactory implements MongoDBFactory, InitializingBean {
 	private Set<AbstractMongoDatasourceFactory> datasourceFactories;
@@ -54,6 +55,9 @@ public class DistributeMongoDBFactory implements MongoDBFactory, InitializingBea
 				for (String dbname : datasourceFactory.getMongoDatasource().getDatabaseNames()) {
 					dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
 				}
+			}
+			if (datasourceFactory.getConfig().isReadSlave()) {
+				datasourceFactory.getMongoDatasource().setReadPreference(ReadPreference.SECONDARY);
 			}
 		}
 	}

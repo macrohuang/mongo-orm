@@ -4,6 +4,7 @@ package github.macrohuang.orm.mongo.util;
 import github.macrohuang.orm.mongo.annotation.Document;
 import github.macrohuang.orm.mongo.annotation.Embed;
 import github.macrohuang.orm.mongo.annotation.MongoField;
+import github.macrohuang.orm.mongo.constant.Constants;
 import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
 
 import java.lang.reflect.Array;
@@ -170,5 +171,18 @@ public class DBObjectUtil {
 			}
 		}
 		return po;
+	}
+
+	public static <T> void setEntryId(DBObject object, T po) {
+		Field field = FIELD_CACHE_MAP.getPoField(po.getClass(), Constants.MONGO_ID);
+		try {
+			field.set(po, object.get(Constants.MONGO_ID).toString());
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			throw new MongoDBMappingException("setter argument does match", e);
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			throw new MongoDBMappingException("you don't have permission to access this field, properly there doesn't a setter exists.", e);
+		}
 	}
 }

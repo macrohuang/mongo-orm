@@ -2,6 +2,7 @@ package github.macrohuang.orm.mongo.util;
 
 import github.macrohuang.orm.mongo.annotation.Embed;
 import github.macrohuang.orm.mongo.annotation.MongoField;
+import github.macrohuang.orm.mongo.annotation.MongoId;
 import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
 
 import java.lang.reflect.Field;
@@ -42,6 +43,10 @@ public class FieldCacheMap {
 					}
 					Embed e = field.getAnnotation(Embed.class);
 					embed.get(class1).add(e.parent());
+				}
+				if (field.getAnnotation(MongoId.class) != null) {
+					doc2field.put("_id", field);
+					field2doc.put(field.getName(), "_id");
 				}
 			}
 			fieldDocKeyMap.put(class1, field2doc);

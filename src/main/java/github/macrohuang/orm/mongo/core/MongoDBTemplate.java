@@ -17,6 +17,7 @@ package github.macrohuang.orm.mongo.core;
 
 
 import github.macrohuang.orm.mongo.config.DBChooser;
+import github.macrohuang.orm.mongo.constant.Constants;
 import github.macrohuang.orm.mongo.exception.MongoDataAccessException;
 import github.macrohuang.orm.mongo.query.Page;
 import github.macrohuang.orm.mongo.query.Query;
@@ -177,7 +178,7 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	/**
 	 * Save an entry to the DB, with manual specify {@link DBChooser}.
 	 * 
-	 * @see #save(Object)
+	 * @see #insert(Object)
 	 * @see #findByExample(DBChooser, Object)
 	 * @param <T>
 	 * @param dbChooser
@@ -186,31 +187,58 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	 *         <code>false</code> for fail.
 	 * @throws MongoDataAccessException
 	 */
-	public <T> boolean save(DBChooser dbChooser, T entry) throws MongoDataAccessException {
+	public <T> String insert(DBChooser dbChooser, T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
 		Assert.assertNotNull(dbChooser);
 		LOGGER.info("Save request received:" + dbChooser + "," + entry);
 		DBCollection collection = getCollection(dbChooser);
-		return returnResult(collection.insert(DBObjectUtil.convertPO2DBObject(entry)));
+		DBObject object = DBObjectUtil.convertPO2DBObject(entry);
+		if (returnResult(collection.insert(object))) {
+			DBObjectUtil.setEntryId(object, entry);
+			return object.get(Constants.MONGO_ID).toString();
+		} else {
+			return null;
+		}
+	}
+
+	public <T> String saveOrUpdate(DBChooser dbChooser, T entry) throws MongoDataAccessException {
+		Assert.assertNotNull(dbChooser);
+		Assert.assertNotNull(entry);
+		LOGGER.info("Save request received:" + entry);
+		DBCollection collection = getCollection(dbChooser);
+		DBObject po = DBObjectUtil.convertPO2DBObject(entry);
+		if (returnResult(collection.save(po))) {
+			DBObjectUtil.setEntryId(po, entry);
+			return po.get(Constants.MONGO_ID).toString();
+		} else {
+			return null;
+		}
 	}
 
 	/**
 	 * Save a lot of entries with manual specify DBChooser.
-	 * {@link #save(DBChooser, Object)}
+	 * {@link #insert(DBChooser, Object)}
 	 * 
-	 * @see #save(DBChooser, Object)
+	 * @see #insert(DBChooser, Object)
 	 * @param <T>
 	 * @param dbChooser
 	 * @param entrys
 	 * @return
 	 * @throws MongoDataAccessException
 	 */
-	public <T> boolean saveAll(DBChooser dbChooser, List<T> entrys) throws MongoDataAccessException {
+	public <T> boolean insertAll(DBChooser dbChooser, List<T> entrys) throws MongoDataAccessException {
 		Assert.assertNotNull(entrys);
 		Assert.assertNotNull(dbChooser);
 		Assert.assertNotEmpty(entrys);
 		LOGGER.info("saveAll request received:" + dbChooser + "," + entrys);
-		return saveAllInner(getCollection(dbChooser), entrys);
+		return insertAllInner(getCollection(dbChooser), entrys);
+	}
+
+	public <T> boolean saveOrUpdateAll(DBChooser dbChooser, List<T> entrys) throws MongoDataAccessException {
+		Assert.assertNotNull(entrys);
+		Assert.assertNotEmpty(entrys);
+		LOGGER.info("saveOrUpdateAll request received:" + entrys);
+		return saveOrUpdateAllInner(getCollection(dbChooser), entrys);
 	}
 
 	/**

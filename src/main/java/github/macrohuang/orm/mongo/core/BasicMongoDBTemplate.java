@@ -3,6 +3,7 @@ package github.macrohuang.orm.mongo.core;
 import github.macrohuang.orm.mongo.annotation.Document;
 import github.macrohuang.orm.mongo.annotation.MongoField;
 import github.macrohuang.orm.mongo.config.DBChooser;
+import github.macrohuang.orm.mongo.constant.Constants;
 import github.macrohuang.orm.mongo.exception.MongoDataAccessException;
 import github.macrohuang.orm.mongo.factory.MongoDBFactory;
 import github.macrohuang.orm.mongo.query.Page;
@@ -289,35 +290,78 @@ public class BasicMongoDBTemplate {
 	 *         <code>false</code> for fail.
 	 * @throws MongoDataAccessException
 	 */
-	public <T> boolean save(T entry) throws MongoDataAccessException {
+	public <T> String insert(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
 		LOGGER.info("Save request received:" + entry);
 		DBCollection collection = getCollection(entry);
-		return returnResult(collection.insert(DBObjectUtil.convertPO2DBObject(entry)));
+		DBObject po = DBObjectUtil.convertPO2DBObject(entry);
+		if (returnResult(collection.insert(po))) {
+			DBObjectUtil.setEntryId(po, entry);
+			return po.get(Constants.MONGO_ID).toString();
+		} else {
+			return null;
+		}
+	}
+
+	public <T> String saveOrUpdate(T entry) throws MongoDataAccessException {
+		Assert.assertNotNull(entry);
+		LOGGER.info("Save request received:" + entry);
+		DBCollection collection = getCollection(entry);
+		DBObject po = DBObjectUtil.convertPO2DBObject(entry);
+		if (returnResult(collection.save(po))) {
+			DBObjectUtil.setEntryId(po, entry);
+			return po.get(Constants.MONGO_ID).toString();
+		} else {
+			return null;
+		}
 	}
 
 	/**
-	 * Save a lot of entries. {@link #save(Object)}
+	 * Save a lot of entries. {@link #insert(Object)}
 	 * 
-	 * @see #save(Object)
+	 * @see #insert(Object)
 	 * @param <T>
 	 * @param entrys
 	 * @return
 	 * @throws MongoDataAccessException
 	 */
-	public <T> boolean saveAll(List<T> entrys) throws MongoDataAccessException {
+	public <T> boolean insertAll(List<T> entrys) throws MongoDataAccessException {
 		Assert.assertNotNull(entrys);
 		Assert.assertNotEmpty(entrys);
 		LOGGER.info("saveAll request received:" + entrys);
-		return saveAllInner(getCollection(entrys.get(0)), entrys);
+		return insertAllInner(getCollection(entrys.get(0)), entrys);
 	}
 
-	protected <T> boolean saveAllInner(DBCollection collection, List<T> entrys) {
+	public <T> boolean saveOrUpdateAll(List<T> entrys) throws MongoDataAccessException {
+		Assert.assertNotNull(entrys);
+		Assert.assertNotEmpty(entrys);
+		LOGGER.info("saveOrUpdateAll request received:" + entrys);
+		return saveOrUpdateAllInner(getCollection(entrys.get(0)), entrys);
+	}
+
+	protected <T> boolean insertAllInner(DBCollection collection, List<T> entrys) {
 		List<DBObject> list = new ArrayList<DBObject>();
 		for (T entry : entrys) {
 			list.add(DBObjectUtil.convertPO2DBObject(entry));
 		}
-		return returnResult(collection.insert(list));
+		if (returnResult(collection.insert(list))) {
+			for (int i = 0; i < list.size() && i < entrys.size(); i++) {
+				DBObjectUtil.setEntryId(list.get(i), entrys.get(i));
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	protected <T> boolean saveOrUpdateAllInner(DBCollection collection, List<T> entrys) {
+		boolean result = true;
+		for (T entry : entrys) {
+			DBObject object = DBObjectUtil.convertPO2DBObject(entry);
+			result &= returnResult(collection.save(object));
+			DBObjectUtil.setEntryId(object, entry);
+		}
+		return result;
 	}
 
 	public void setBatchSize(int batchSize) {
@@ -362,5 +406,4 @@ public class BasicMongoDBTemplate {
 		DBCollection collection = getCollection(query.getQueryPOClass());
 		return returnResult(collection.update(query.buildQuery(), new BasicDBObject("$set", DBObjectUtil.convertPO2DBObject(entry)), upsert, multi));
 	}
-
 }

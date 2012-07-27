@@ -42,7 +42,7 @@ public class MongoDBTemplateTest extends BaseTest {
 		testPO.setDescs(new String[] { "abc", "123" });
 		testPO.setDesc3(Arrays.asList("12345", "23456", "34567"));
 		testPO.setDescs2(new HashSet<String>(testPO.getDesc3()));
-		template.save(testPO);
+		template.insert(testPO);
 		Assert.assertEquals(testPO.getId(), template.findByExample(testPO).get(0).getId());
 		// Assert.assertTrue(template.delete(testPO));
 	}
@@ -50,7 +50,7 @@ public class MongoDBTemplateTest extends BaseTest {
 	@Test
 	public void testSaveEmbed() {
 		EmbedPO po = new EmbedPO("name", 17, "Beijing", "Beijing", "Haidian");
-		template.save(po);
+		template.insert(po);
 		Assert.assertEquals(po, template.findByExample(po).get(0));
 	}
 

@@ -12,6 +12,7 @@ import github.macrohuang.orm.mongo.util.DBObjectUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
@@ -82,7 +83,7 @@ public class BasicMongoDBTemplate {
 	@SuppressWarnings("unchecked")
 	protected <T> Page<T> fillPage(Query query, DBCursor cursor) {
 		Page<T> page = new Page<T>();
-		page.setTotalCount(cursor.count());
+		page.setTotalCount(cursor.size());
 		page.setPageNum(query.getPageNum());
 		page.setPageSize(query.getPageSize());
 		List<T> results = new ArrayList<T>();
@@ -99,6 +100,23 @@ public class BasicMongoDBTemplate {
 		}
 		page.setResults(results);
 		return page;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> List<Map<String, Object>> fillResult(Query query, DBCursor cursor) {
+		List<Map<String, Object>> result = new ArrayList<Map<String,Object>>();
+		for (DBObject object : cursor) {
+			try {
+				result.add(DBObjectUtil.convertDBObjectToPoMap(object, (T) query.getQueryPOClass().newInstance()));
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+				throw new MongoDataAccessException("can't instance a interface or abstract class", e);
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+				throw new MongoDataAccessException(e);
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -195,6 +213,12 @@ public class BasicMongoDBTemplate {
 		}
 	}
 
+	protected <T> DBCollection getCollection(DBChooser dbChooser) throws MongoDataAccessException {
+		if (dbChooser == null)
+			throw new MongoDataAccessException("DBChooser can not be null");
+		return getDbFactory().getDB(dbChooser.getDb()).getCollection(dbChooser.getCollection());
+	}
+
 	private <T> DBCollection getCollection(T entry) throws MongoDataAccessException {
 		if (entry == null)
 			throw new MongoDataAccessException("Entry can not be null");
@@ -220,7 +244,45 @@ public class BasicMongoDBTemplate {
 	public <T> Page<T> query(Query query) {
 		Assert.assertNotNull(query);
 		LOGGER.info("query receive:" + query);
-		return queryInner(getCollection(query.getQueryPOClass()), query);
+		Page<T> result = new Page<T>();
+		Page<T> tmpPage = null;
+		if (query.isUsingDBChooser()) {
+			for (DBChooser dbChooser : query.getDbChoosers()) {
+				tmpPage = queryInner(getCollection(dbChooser), query);
+				result.addPage(tmpPage);
+			}
+		} else {
+			result = queryInner(getCollection(query.getQueryPOClass()), query);
+		}
+		return result;
+	}
+
+	/**
+	 * Query with a query object, return the raw result. The <code>query</code>
+	 * must be given a class of a PO Object with
+	 * {@link com.sogou.bizdev.mongo.orm.annotation.Document} annotation.
+	 * 
+	 * @param <T>
+	 * @param query
+	 * @param dbChooser
+	 *            A manual dbChooser or <code>null</code> for auto dbChooser via
+	 *            the po annotation.
+	 * @return The query result, in the form of
+	 *         <code>List<Map<String,Object>></code>, the key of the map is the
+	 *         po object's field name.
+	 */
+	public <T> List<Map<String, Object>> queryForRaw(Query query) {
+		Assert.assertNotNull(query);
+		LOGGER.info("query receive:" + query);
+		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+		if (query.isUsingDBChooser()) {
+			for (DBChooser dbChooser : query.getDbChoosers()) {
+				result.addAll(queryInnerRaw(getCollection(dbChooser), query));
+			}
+		} else {
+			result = queryInnerRaw(getCollection(query.getQueryPOClass()), query);
+		}
+		return result;
 	}
 
 	/**
@@ -263,6 +325,24 @@ public class BasicMongoDBTemplate {
 			cursor.skip(query.getPageNum() * query.getPageSize());
 		}
 		return fillPage(query, cursor);
+	}
+
+	private <T> List<Map<String, Object>> queryInnerRaw(DBCollection collection, Query query) {
+		DBCursor cursor = null;
+		if (query.getProjection() != null) {
+			cursor = collection.find(query.buildQuery(), query.getProjection());
+		} else {
+			cursor = collection.find(query.buildQuery());
+		}
+		if (query.getOrderMap() != null) {
+			cursor.sort(query.getOrderMap());
+		}
+		if (query.getMax() > 0) {
+			cursor.limit(query.getMax());
+		} else if (query.getPageSize() > 0) {
+			cursor.skip(query.getPageNum() * query.getPageSize());
+		}
+		return fillResult(query, cursor);
 	}
 
 	protected boolean returnResult(WriteResult result) {

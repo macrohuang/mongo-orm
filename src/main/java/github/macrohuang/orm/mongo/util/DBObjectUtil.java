@@ -13,8 +13,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -184,5 +186,20 @@ public class DBObjectUtil {
 			e.printStackTrace();
 			throw new MongoDBMappingException("you don't have permission to access this field, properly there doesn't a setter exists.", e);
 		}
+	}
+
+	public static <T> Map<String, Object> convertDBObjectToPoMap(DBObject dbObject, T po) {
+		if (po == null)
+			throw new MongoDBMappingException("can't not fill a document into a null po.");
+		Map<String, Object> result = new HashMap<String, Object>();
+		FIELD_CACHE_MAP.addIfAbsent(po.getClass());
+		Field field;
+		for (String mongoField : dbObject.keySet()) {
+			if (FIELD_CACHE_MAP.isPoField(po.getClass(), mongoField)) {
+				field = FIELD_CACHE_MAP.getPoField(po.getClass(), mongoField);
+				result.put(field.getName(), dbObject.get(mongoField));
+			}
+		}
+		return result;
 	}
 }

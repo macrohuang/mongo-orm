@@ -1,6 +1,11 @@
 package github.macrohuang.orm.mongo.query;
 
+import github.macrohuang.orm.mongo.config.DBChooser;
+import github.macrohuang.orm.mongo.core.Assert;
 import github.macrohuang.orm.mongo.util.FieldCacheMap;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -15,6 +20,9 @@ public class Query {
 	private int pageNum;
 	private int max;
 	private DBObject projection;
+	private List<String> groups;
+	private List<DBChooser> dbChoosers;
+	private boolean usingDBChooser;
 
 	public Query(Class<?> class1) {
 		this.class1 = class1;
@@ -122,6 +130,38 @@ public class Query {
 			this.max = max;
 		}
 		return this;
+	}
+
+	public Query groupBy(String field) {
+		if (groups == null) {
+			groups = new ArrayList<String>();
+		}
+		groups.add(field);
+		return this;
+	}
+
+	public List<String> getGroups() {
+		return groups;
+	}
+
+	public Query addDBChooser(DBChooser dbChooser) {
+		Assert.assertNotNull(dbChooser);
+		if (dbChoosers == null) {
+			usingDBChooser = true;
+			dbChoosers = new ArrayList<DBChooser>();
+		}
+		if (!dbChoosers.contains(dbChooser)) {
+			dbChoosers.add(dbChooser);
+		}
+		return this;
+	}
+
+	public List<DBChooser> getDbChoosers() {
+		return dbChoosers;
+	}
+
+	public boolean isUsingDBChooser() {
+		return usingDBChooser;
 	}
 
 	@Override

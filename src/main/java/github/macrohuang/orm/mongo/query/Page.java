@@ -52,6 +52,17 @@ public class Page<T> {
 		}
 	}
 
+	public Page<T> addPage(Page<T> page) {
+		if (page != null) {
+			if (page.getResults() != null) {
+				if (this.results == null) {
+					this.results = page.getResults();
+				}
+			}
+			this.totalCount += page.getTotalCount();
+		}
+		return this;
+	}
 	@Override
 	public String toString() {
 		return "Page [results=" + results + ", pageNum=" + pageNum + ", pageSize=" + pageSize + ", totalCount=" + totalCount + "]";

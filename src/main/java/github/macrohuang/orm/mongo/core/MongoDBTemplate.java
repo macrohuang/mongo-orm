@@ -136,12 +136,6 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 		return dbCursor == null ? 0 : dbCursor.count();
 	}
 
-	private <T> DBCollection getCollection(DBChooser dbChooser) throws MongoDataAccessException {
-		if (dbChooser == null)
-			throw new MongoDataAccessException("DBChooser can not be null");
-		return getDbFactory().getDB(dbChooser.getDb()).getCollection(dbChooser.getCollection());
-	}
-
 	/**
 	 * Query with a query object and manual specify DBChooser.
 	 * 

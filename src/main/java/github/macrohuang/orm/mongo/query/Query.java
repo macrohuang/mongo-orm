@@ -164,6 +164,13 @@ public class Query {
 		return usingDBChooser;
 	}
 
+	public Object getQueryCondition(String field) {
+		if (queryObject.containsField(getDocKey(field))) {
+			return queryObject.get(getDocKey(field));
+		} else {
+			return null;
+		}
+	}
 	@Override
 	public String toString() {
 		return "Query [class1=" + class1 + ", queryObject=" + queryObject + ", orderMap=" + orderMap + ", skip=" + skip + ", pageSize=" + pageSize

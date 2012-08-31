@@ -149,6 +149,8 @@ public class DBObjectUtil {
 								}
 							}
 						}
+					} else if (FIELD_CACHE_MAP.isId(po, mongoField)) {
+						field.set(po, String.valueOf(docVal));
 					} else {
 						BeanUtils.setProperty(po, field.getName(), docVal);
 					}
@@ -169,7 +171,7 @@ public class DBObjectUtil {
 					throw new MongoDBMappingException("can not set the field value.", e);
 				}
 			} else if (FIELD_CACHE_MAP.isEmbed(po, mongoField) && dbObject.get(mongoField) instanceof DBObject) {
-				fillDocument2PO((DBObject) dbObject.get(mongoField), po);
+				return fillDocument2PO((DBObject) dbObject.get(mongoField), po);
 			}
 		}
 		return po;

@@ -90,6 +90,9 @@ public class FieldCacheMap {
 		}
 	}
 
+public <T> boolean isId(T po, String mongoKey) {
+		return docKeyFieldMap.get(po.getClass()).containsKey(mongoKey) && "_id".equals(mongoKey);
+	}
 	public <T> boolean isPoField(Class<T> class1, String mongoKey) {
 		if (!docKeyFieldMap.containsKey(class1))
 			return false;

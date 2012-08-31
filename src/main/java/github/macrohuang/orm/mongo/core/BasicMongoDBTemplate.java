@@ -316,7 +316,7 @@ public class BasicMongoDBTemplate {
 		} else {
 			cursor = collection.find(query.buildQuery());
 		}
-		if (query.getOrderMap() != null) {
+		if (query.getOrderMap() != null && cursor.size() < Constants.SORT_MAX_RECORD_WITHOUT_INDEX) {
 			cursor.sort(query.getOrderMap());
 		}
 		if (query.getMax() > 0) {

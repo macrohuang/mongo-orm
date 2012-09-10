@@ -4,7 +4,6 @@ package github.macrohuang.orm.mongo.util;
 import github.macrohuang.orm.mongo.annotation.Document;
 import github.macrohuang.orm.mongo.annotation.Embed;
 import github.macrohuang.orm.mongo.annotation.MongoField;
-import github.macrohuang.orm.mongo.annotation.MongoId;
 import github.macrohuang.orm.mongo.constant.Constants;
 import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
 
@@ -85,13 +84,15 @@ public class DBObjectUtil {
 					}
 					if (nullable || !nullable && field.get(object) != null) {
 						((DBObject) dbObject.get(embed.parent())).put(docKey, field.get(object));
-						// dbObject.put(embed.parent() + "." + docKey,
-						// field.get(object));
 					}
 				} else {
 					if (nullable || !nullable && field.get(object) != null) {
-						if (field.getAnnotation(MongoId.class) != null) {
-							dbObject.put(docKey, new ObjectId(String.valueOf(field.get(object))));
+						if (FIELD_CACHE_MAP.isId(object, docKey)) {
+							if (ObjectId.isValid(String.valueOf(field.get(object)))) {
+								dbObject.put(docKey, new ObjectId(String.valueOf(field.get(object))));
+							} else {
+								dbObject.put(docKey, String.valueOf(field.get(object)));
+							}
 						} else {
 							dbObject.put(docKey, field.get(object));
 						}

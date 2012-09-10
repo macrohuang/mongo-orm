@@ -19,6 +19,10 @@ public class TestPO implements Serializable {
      */
 	private static final long serialVersionUID = -975960716165479997L;
 
+	// @MongoId
+	@MongoField(field = "_id")
+	private String mid;
+
 	@MongoField
 	private String id;
 
@@ -97,6 +101,13 @@ public class TestPO implements Serializable {
 		this.descs = descs;
 	}
 
+	public String getMid() {
+		return mid;
+	}
+
+	public void setMid(String mid) {
+		this.mid = mid;
+	}
 
 	@Override
 	public int hashCode() {

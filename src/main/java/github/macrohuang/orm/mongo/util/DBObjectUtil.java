@@ -4,6 +4,7 @@ package github.macrohuang.orm.mongo.util;
 import github.macrohuang.orm.mongo.annotation.Document;
 import github.macrohuang.orm.mongo.annotation.Embed;
 import github.macrohuang.orm.mongo.annotation.MongoField;
+import github.macrohuang.orm.mongo.annotation.MongoId;
 import github.macrohuang.orm.mongo.constant.Constants;
 import github.macrohuang.orm.mongo.exception.MongoDBMappingException;
 
@@ -21,6 +22,7 @@ import java.util.Set;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.log4j.Logger;
+import org.bson.types.ObjectId;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
@@ -88,7 +90,11 @@ public class DBObjectUtil {
 					}
 				} else {
 					if (nullable || !nullable && field.get(object) != null) {
-						dbObject.put(docKey, field.get(object));
+						if (field.getAnnotation(MongoId.class) != null) {
+							dbObject.put(docKey, new ObjectId(String.valueOf(field.get(object))));
+						} else {
+							dbObject.put(docKey, field.get(object));
+						}
 					}
 				}
 			} catch (IllegalArgumentException e) {

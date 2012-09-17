@@ -1,5 +1,6 @@
 package github.macrohuang.orm.mongo.factory;
 
+import github.macrohuang.orm.mongo.constant.Constants;
 import github.macrohuang.orm.mongo.exception.MongoDataAccessException;
 
 import java.util.Map;
@@ -26,7 +27,8 @@ public class DistributeMongoDBFactory implements MongoDBFactory, InitializingBea
 
 	@Override
 	public DB getDB(String dbName) throws MongoDataAccessException {
-		logger.info("get db:" + dbName);
+		if (Constants.coreLogEnable)
+			logger.info("get db:" + dbName);
 		return dbMap.get(dbName);
 	}
 

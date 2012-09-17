@@ -13,6 +13,7 @@ import github.macrohuang.orm.mongo.util.DBObjectUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
@@ -28,6 +29,8 @@ public class BasicMongoDBTemplate {
 	private MongoDBFactory dbFactory;
 	protected int batchSize = 1000;
 	private static final Logger LOGGER = Logger.getLogger(BasicMongoDBTemplate.class);
+	private static Map<Class<?>, DBCollection> collectionsCacheByClass = new ConcurrentHashMap<Class<?>, DBCollection>();
+	private static Map<DBChooser, DBCollection> collectionsCacheByDBChoooser = new ConcurrentHashMap<DBChooser, DBCollection>();
 
 
 	/**
@@ -45,10 +48,12 @@ public class BasicMongoDBTemplate {
 	 */
 	public <T> boolean delete(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
-		LOGGER.info("delete request received: " + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("delete request received: " + entry);
 		DBCollection collection = getCollection(entry);
-		boolean result = returnResult(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
-		LOGGER.info("delete result: " + result);
+		boolean result = isOperateSuccess(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
+		if (Constants.coreLogEnable)
+			LOGGER.info("delete result: " + result);
 		return result;
 	}
 
@@ -71,12 +76,14 @@ public class BasicMongoDBTemplate {
 	}
 
 	protected <T> boolean deleteAllInner(List<T> entrys, DBCollection collection) {
-		LOGGER.info("delete all request received:" + entrys + "," + collection);
+		if (Constants.coreLogEnable)
+			LOGGER.info("delete all request received:" + entrys + "," + collection);
 		boolean result = true;
 		for (T entry : entrys) {
-			result &= returnResult(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
+			result &= isOperateSuccess(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
 		}
-		LOGGER.info("delete result:" + result);
+		if (Constants.coreLogEnable)
+			LOGGER.info("delete result:" + result);
 		return result;
 	}
 
@@ -138,7 +145,8 @@ public class BasicMongoDBTemplate {
 	 */
 	public <T> List<T> findByExample(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
-		LOGGER.info("Find by example request receive:" + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("Find by example request receive:" + entry);
 		return findByExampleInner(getCollection(entry), entry);
 	}
 
@@ -153,7 +161,8 @@ public class BasicMongoDBTemplate {
 	 */
 	public <T> int getCountByExample(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
-		LOGGER.info("getCountByExample request receive:" + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("getCountByExample request receive:" + entry);
 		DBCursor dbCursor = getCollection(entry).find(DBObjectUtil.convertPO2DBObject(entry));
 		return dbCursor == null ? 0 : dbCursor.count();
 	}
@@ -197,26 +206,40 @@ public class BasicMongoDBTemplate {
 	}
 
 	private DBCollection getCollection(Class<?> class1) {
-		Document document = class1.getAnnotation(Document.class);
-		if (document == null) {
-			throw new MongoDataAccessException("Entry does not mapped by mongo.");
-		}
-		DB db = dbFactory.getDB(document.db());
-		if (StringUtils.hasText(document.collection())) {
-			return db.getCollection(document.collection());
+		DBCollection collection = null;
+		if (collectionsCacheByClass.containsKey(class1)) {
+			collection = collectionsCacheByClass.get(class1);
 		} else {
-			String className = class1.getName();
-			if (className.contains(".")) {
-				className = className.substring(className.lastIndexOf("."));
+			Document document = class1.getAnnotation(Document.class);
+			if (document == null) {
+				throw new MongoDataAccessException("Entry does not mapped by mongo.");
 			}
-			return db.getCollection(className.toLowerCase());
+			DB db = dbFactory.getDB(document.db());
+			if (StringUtils.hasText(document.collection())) {
+				collection = db.getCollection(document.collection());
+			} else {
+				String className = class1.getName();
+				if (className.contains(".")) {
+					className = className.substring(className.lastIndexOf("."));
+				}
+				collection = db.getCollection(className.toLowerCase());
+			}
+			collectionsCacheByClass.put(class1, collection);
 		}
+		return collection;
 	}
 
 	protected <T> DBCollection getCollection(DBChooser dbChooser) throws MongoDataAccessException {
-		if (dbChooser == null)
-			throw new MongoDataAccessException("DBChooser can not be null");
-		return getDbFactory().getDB(dbChooser.getDb()).getCollection(dbChooser.getCollection());
+		DBCollection collection = null;
+		if (collectionsCacheByDBChoooser.containsKey(dbChooser)) {
+			collection = collectionsCacheByDBChoooser.get(dbChooser);
+		} else {
+			if (dbChooser == null)
+				throw new MongoDataAccessException("DBChooser can not be null");
+			collection = getDbFactory().getDB(dbChooser.getDb()).getCollection(dbChooser.getCollection());
+			collectionsCacheByDBChoooser.put(dbChooser, collection);
+		}
+		return collection;
 	}
 
 	private <T> DBCollection getCollection(T entry) throws MongoDataAccessException {
@@ -243,7 +266,8 @@ public class BasicMongoDBTemplate {
 	 */
 	public <T> Page<T> query(Query query) {
 		Assert.assertNotNull(query);
-		LOGGER.info("query receive:" + query);
+		if (Constants.coreLogEnable)
+			LOGGER.info("query receive:" + query);
 		Page<T> result = new Page<T>();
 		Page<T> tmpPage = null;
 		if (query.isUsingDBChooser()) {
@@ -273,7 +297,8 @@ public class BasicMongoDBTemplate {
 	 */
 	public <T> List<Map<String, Object>> queryForRaw(Query query) {
 		Assert.assertNotNull(query);
-		LOGGER.info("query receive:" + query);
+		if (Constants.coreLogEnable)
+			LOGGER.info("query receive:" + query);
 		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 		if (query.isUsingDBChooser()) {
 			for (DBChooser dbChooser : query.getDbChoosers()) {
@@ -345,11 +370,12 @@ public class BasicMongoDBTemplate {
 		return fillResult(query, cursor);
 	}
 
-	protected boolean returnResult(WriteResult result) {
-		if (result == null || StringUtils.hasText(result.getError())) {
+	protected boolean isOperateSuccess(WriteResult result) {
+		if ("N/A".equals(result.toString())) {
+			return true;
+		} else {
 			return false;
 		}
-		return true;
 	}
 
 
@@ -372,10 +398,11 @@ public class BasicMongoDBTemplate {
 	 */
 	public <T> String insert(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
-		LOGGER.info("Save request received:" + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("Save request received:" + entry);
 		DBCollection collection = getCollection(entry);
 		DBObject po = DBObjectUtil.convertPO2DBObject(entry);
-		if (returnResult(collection.insert(po))) {
+		if (isOperateSuccess(collection.insert(po))) {
 			DBObjectUtil.setEntryId(po, entry);
 			return po.get(Constants.MONGO_ID).toString();
 		} else {
@@ -385,10 +412,11 @@ public class BasicMongoDBTemplate {
 
 	public <T> String saveOrUpdate(T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
-		LOGGER.info("Save request received:" + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("Save request received:" + entry);
 		DBCollection collection = getCollection(entry);
 		DBObject po = DBObjectUtil.convertPO2DBObject(entry);
-		if (returnResult(collection.save(po))) {
+		if (isOperateSuccess(collection.save(po))) {
 			DBObjectUtil.setEntryId(po, entry);
 			return po.get(Constants.MONGO_ID).toString();
 		} else {
@@ -408,14 +436,16 @@ public class BasicMongoDBTemplate {
 	public <T> boolean insertAll(List<T> entrys) throws MongoDataAccessException {
 		Assert.assertNotNull(entrys);
 		Assert.assertNotEmpty(entrys);
-		LOGGER.info("saveAll request received:" + entrys);
+		if (Constants.coreLogEnable)
+			LOGGER.info("saveAll request received:" + entrys);
 		return insertAllInner(getCollection(entrys.get(0)), entrys);
 	}
 
 	public <T> boolean saveOrUpdateAll(List<T> entrys) throws MongoDataAccessException {
 		Assert.assertNotNull(entrys);
 		Assert.assertNotEmpty(entrys);
-		LOGGER.info("saveOrUpdateAll request received:" + entrys);
+		if (Constants.coreLogEnable)
+			LOGGER.info("saveOrUpdateAll request received:" + entrys);
 		return saveOrUpdateAllInner(getCollection(entrys.get(0)), entrys);
 	}
 
@@ -424,7 +454,7 @@ public class BasicMongoDBTemplate {
 		for (T entry : entrys) {
 			list.add(DBObjectUtil.convertPO2DBObject(entry));
 		}
-		if (returnResult(collection.insert(list))) {
+		if (isOperateSuccess(collection.insert(list))) {
 			for (int i = 0; i < list.size() && i < entrys.size(); i++) {
 				DBObjectUtil.setEntryId(list.get(i), entrys.get(i));
 			}
@@ -438,7 +468,7 @@ public class BasicMongoDBTemplate {
 		boolean result = true;
 		for (T entry : entrys) {
 			DBObject object = DBObjectUtil.convertPO2DBObject(entry);
-			result &= returnResult(collection.save(object));
+			result &= isOperateSuccess(collection.save(object));
 			DBObjectUtil.setEntryId(object, entry);
 		}
 		return result;
@@ -464,7 +494,8 @@ public class BasicMongoDBTemplate {
 	public <T> boolean update(Query query, T entry) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(entry);
-		LOGGER.info("update:" + ",query:" + query + ",entry:" + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("update:" + ",query:" + query + ",entry:" + entry);
 		return update(query, entry, true, true);
 	}
 
@@ -482,8 +513,9 @@ public class BasicMongoDBTemplate {
 	public <T> boolean update(Query query, T entry, boolean upsert, boolean multi) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(entry);
-		LOGGER.info("update:" + ",query:" + query + ",entry:" + entry + ",upsert:" + upsert + ",multi:" + multi);
+		if (Constants.coreLogEnable)
+			LOGGER.info("update:" + ",query:" + query + ",entry:" + entry + ",upsert:" + upsert + ",multi:" + multi);
 		DBCollection collection = getCollection(query.getQueryPOClass());
-		return returnResult(collection.update(query.buildQuery(), new BasicDBObject("$set", DBObjectUtil.convertPO2DBObject(entry)), upsert, multi));
+		return isOperateSuccess(collection.update(query.buildQuery(), new BasicDBObject("$set", DBObjectUtil.convertPO2DBObject(entry)), upsert, multi));
 	}
 }

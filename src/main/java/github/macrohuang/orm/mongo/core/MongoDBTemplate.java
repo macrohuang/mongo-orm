@@ -71,10 +71,12 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	 */
 	public <T> boolean delete(DBChooser dbChooser, T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
-		LOGGER.info("delete request received: " + dbChooser + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("delete request received: " + dbChooser + entry);
 		DBCollection collection = getCollection(dbChooser);
-		boolean result = returnResult(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
-		LOGGER.info("delete result: " + result);
+		boolean result = isOperateSuccess(collection.remove(DBObjectUtil.convertPO2DBObject(entry)));
+		if (Constants.coreLogEnable)
+			LOGGER.info("delete result: " + result);
 		return result;
 	}
 
@@ -115,7 +117,8 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	public <T> List<T> findByExample(DBChooser dbChooser, T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
 		Assert.assertNotNull(dbChooser);
-		LOGGER.info("Find by example request receive:" + dbChooser + "," + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("Find by example request receive:" + dbChooser + "," + entry);
 		return findByExampleInner(getCollection(dbChooser), entry);
 	}
 
@@ -150,7 +153,8 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	public <T> Page<T> query(DBChooser dbChooser, Query query) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(dbChooser);
-		LOGGER.info("query receive:" + dbChooser + "," + query);
+		if (Constants.coreLogEnable)
+			LOGGER.info("query receive:" + dbChooser + "," + query);
 		return queryInner(getCollection(dbChooser), query);
 	}
 
@@ -184,10 +188,11 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	public <T> String insert(DBChooser dbChooser, T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(entry);
 		Assert.assertNotNull(dbChooser);
-		LOGGER.info("Save request received:" + dbChooser + "," + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("Save request received:" + dbChooser + "," + entry);
 		DBCollection collection = getCollection(dbChooser);
 		DBObject object = DBObjectUtil.convertPO2DBObject(entry);
-		if (returnResult(collection.insert(object))) {
+		if (isOperateSuccess(collection.insert(object))) {
 			DBObjectUtil.setEntryId(object, entry);
 			return object.get(Constants.MONGO_ID).toString();
 		} else {
@@ -198,10 +203,11 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	public <T> String saveOrUpdate(DBChooser dbChooser, T entry) throws MongoDataAccessException {
 		Assert.assertNotNull(dbChooser);
 		Assert.assertNotNull(entry);
-		LOGGER.info("Save request received:" + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("Save request received:" + entry);
 		DBCollection collection = getCollection(dbChooser);
 		DBObject po = DBObjectUtil.convertPO2DBObject(entry);
-		if (returnResult(collection.save(po))) {
+		if (isOperateSuccess(collection.save(po))) {
 			DBObjectUtil.setEntryId(po, entry);
 			return po.get(Constants.MONGO_ID).toString();
 		} else {
@@ -224,14 +230,16 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 		Assert.assertNotNull(entrys);
 		Assert.assertNotNull(dbChooser);
 		Assert.assertNotEmpty(entrys);
-		LOGGER.info("saveAll request received:" + dbChooser + "," + entrys);
+		if (Constants.coreLogEnable)
+			LOGGER.info("saveAll request received:" + dbChooser + "," + entrys);
 		return insertAllInner(getCollection(dbChooser), entrys);
 	}
 
 	public <T> boolean saveOrUpdateAll(DBChooser dbChooser, List<T> entrys) throws MongoDataAccessException {
 		Assert.assertNotNull(entrys);
 		Assert.assertNotEmpty(entrys);
-		LOGGER.info("saveOrUpdateAll request received:" + entrys);
+		if (Constants.coreLogEnable)
+			LOGGER.info("saveOrUpdateAll request received:" + entrys);
 		return saveOrUpdateAllInner(getCollection(dbChooser), entrys);
 	}
 
@@ -253,7 +261,8 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	public <T> boolean update(DBChooser dbChooser, Query query, T entry) {
 		Assert.assertNotNull(dbChooser);
 		Assert.assertNotNull(query);
-		LOGGER.info("update:" + dbChooser + "," + query + "," + entry);
+		if (Constants.coreLogEnable)
+			LOGGER.info("update:" + dbChooser + "," + query + "," + entry);
 		Assert.assertNotNull(entry);
 		return update(dbChooser, query, entry, true, true);
 	}
@@ -275,8 +284,9 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	public <T> boolean update(DBChooser dbChooser, Query query, T entry, boolean upsert, boolean multi) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(dbChooser);
-		LOGGER.info("update:" + dbChooser + ",query:" + query + ",entry:" + entry + ",upsert:" + upsert + ",multi:" + multi);
+		if (Constants.coreLogEnable)
+			LOGGER.info("update:" + dbChooser + ",query:" + query + ",entry:" + entry + ",upsert:" + upsert + ",multi:" + multi);
 		DBCollection collection = getCollection(dbChooser);
-		return returnResult(collection.update(query.buildQuery(), new BasicDBObject("$set", DBObjectUtil.convertPO2DBObject(entry)), upsert, multi));
+		return isOperateSuccess(collection.update(query.buildQuery(), new BasicDBObject("$set", DBObjectUtil.convertPO2DBObject(entry)), upsert, multi));
 	}
 }

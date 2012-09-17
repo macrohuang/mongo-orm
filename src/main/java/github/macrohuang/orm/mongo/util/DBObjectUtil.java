@@ -33,17 +33,20 @@ public class DBObjectUtil {
 	private static final Logger logger = Logger.getLogger(DBObjectUtil.class);
 
 	public static DBObject convertPO2DBObject(Object object) throws MongoDBMappingException {
-		logger.info("convert " + object + " into DBObject");
+		if (Constants.convertLogEnable)
+			logger.info("convert " + object + " into DBObject");
 		return convertPO2DBObject(object, 1);
 	}
 
 	public static DBObject convertPO2DBObject(Object object, int deepth) throws MongoDBMappingException {
-		logger.info("convert " + object + " into DBObject with deepth: " + deepth);
+		if (Constants.convertLogEnable)
+			logger.info("convert " + object + " into DBObject with deepth: " + deepth);
 		return convertPO2DBObjectInner(object, false, deepth, 0);
 	}
 
 	public static DBObject convertPO2DBObject(Object object, boolean nullable, int deepth) throws MongoDBMappingException {
-		logger.info("convert " + object + " into DBObject with deepth: " + deepth + ", enable null value: " + nullable);
+		if (Constants.convertLogEnable)
+			logger.info("convert " + object + " into DBObject with deepth: " + deepth + ", enable null value: " + nullable);
 		return convertPO2DBObjectInner(object, nullable, deepth, 0);
 	}
 
@@ -109,7 +112,8 @@ public class DBObjectUtil {
 				throw new MongoDBMappingException("you don't have permission to access this field, properly there doesn't a getter exists.", e);
 			}
 		}
-		logger.info("Convert resutl:" + dbObject);
+		if (Constants.convertLogEnable)
+			logger.info("Convert resutl:" + dbObject);
 		return dbObject;
 	}
 
@@ -186,14 +190,16 @@ public class DBObjectUtil {
 
 	public static <T> void setEntryId(DBObject object, T po) {
 		Field field = FIELD_CACHE_MAP.getPoField(po.getClass(), Constants.MONGO_ID);
-		try {
-			field.set(po, object.get(Constants.MONGO_ID).toString());
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			throw new MongoDBMappingException("setter argument does match", e);
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-			throw new MongoDBMappingException("you don't have permission to access this field, properly there doesn't a setter exists.", e);
+		if (field != null) {
+			try {
+				field.set(po, object.get(Constants.MONGO_ID).toString());
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+				throw new MongoDBMappingException("setter argument does match", e);
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+				throw new MongoDBMappingException("you don't have permission to access this field, properly there doesn't a setter exists.", e);
+			}
 		}
 	}
 

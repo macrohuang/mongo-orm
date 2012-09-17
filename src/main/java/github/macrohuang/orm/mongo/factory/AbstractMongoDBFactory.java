@@ -1,5 +1,6 @@
 package github.macrohuang.orm.mongo.factory;
 
+import github.macrohuang.orm.mongo.constant.Constants;
 import github.macrohuang.orm.mongo.exception.MongoDataAccessException;
 
 import org.apache.log4j.Logger;
@@ -21,7 +22,8 @@ public abstract class AbstractMongoDBFactory implements MongoDBFactory {
 
 	@Override
 	public DB getDB(String dbName) throws MongoDataAccessException {
-		logger.info("get db:" + dbName);
+		if (Constants.coreLogEnable)
+			logger.info("get db:" + dbName);
 		return dataSource.getDB(dbName);
 	}
 }

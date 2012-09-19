@@ -1,5 +1,6 @@
 package github.macrohuang.orm.mongo.query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Page<T> {
@@ -57,15 +58,24 @@ public class Page<T> {
 			if (page.getResults() != null) {
 				if (this.results == null) {
 					this.results = page.getResults();
+				} else {
+					this.results.addAll(page.getResults());
 				}
 			}
 			this.totalCount += page.getTotalCount();
 		}
 		return this;
 	}
+	
+	public Page<T> addResults(List<T> results){
+		if (results == null) {
+			results = new ArrayList<T>();
+		}
+		results.addAll(results);
+		return this;
+	}
 	@Override
 	public String toString() {
 		return "Page [results=" + results + ", pageNum=" + pageNum + ", pageSize=" + pageSize + ", totalCount=" + totalCount + "]";
 	}
-
 }

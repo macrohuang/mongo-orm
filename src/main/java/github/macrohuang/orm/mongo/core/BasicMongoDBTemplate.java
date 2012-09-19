@@ -348,6 +348,7 @@ public class BasicMongoDBTemplate {
 		}
 		if (query.getPageSize() > 0) {
 			cursor.skip(query.getPageNum() * query.getPageSize());
+			cursor.limit(query.getPageSize());
 		} else {
 			if (query.getMax() > 0) {
 				cursor.limit(query.getMax());

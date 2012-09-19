@@ -111,10 +111,15 @@ public class Query {
 		return max;
 	}
 
+	/**
+	 * if skip > 0, then the first skip data will be skipped, otherwise, nothing
+	 * will happen.
+	 * 
+	 * @param skip
+	 * @return
+	 */
 	public Query skip(int skip) {
-		if (skip > 0) {
-			this.skip = skip;
-		}
+		this.skip = skip;
 		return this;
 	}
 

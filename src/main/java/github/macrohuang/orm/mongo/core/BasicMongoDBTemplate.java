@@ -346,11 +346,17 @@ public class BasicMongoDBTemplate {
 		if (query.getOrderMap() != null && cursor.size() < Constants.SORT_MAX_RECORD_WITHOUT_INDEX) {
 			cursor.sort(query.getOrderMap());
 		}
-		if (query.getMax() > 0) {
-			cursor.limit(query.getMax());
-		} else if (query.getPageSize() > 0) {
+		if (query.getPageSize() > 0) {
 			cursor.skip(query.getPageNum() * query.getPageSize());
+		} else {
+			if (query.getMax() > 0) {
+				cursor.limit(query.getMax());
+			}
+			if (query.getSkip() > 0) {
+				cursor.skip(query.getSkip());
+			}
 		}
+
 		return fillPage(query, cursor);
 	}
 

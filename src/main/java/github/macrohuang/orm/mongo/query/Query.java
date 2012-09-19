@@ -149,6 +149,7 @@ public class Query {
 		this.pageNum = 0;
 		this.pageSize = -1;
 		this.max = -1;
+		this.skip = -1;
 		return this;
 	}
 	public Query groupBy(String field) {

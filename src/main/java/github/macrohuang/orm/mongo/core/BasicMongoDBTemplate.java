@@ -93,6 +93,12 @@ public class BasicMongoDBTemplate {
 		page.setTotalCount(cursor.size());
 		page.setPageNum(query.getPageNum());
 		page.setPageSize(query.getPageSize());
+		if (query.getMax() > 0) {
+			cursor.limit(query.getMax());
+		} else if (query.getPageSize() > 0) {
+			cursor.skip(query.getPageNum() * query.getPageSize());
+		}
+
 		List<T> results = new ArrayList<T>();
 		for (DBObject object : cursor) {
 			try {
@@ -344,11 +350,7 @@ public class BasicMongoDBTemplate {
 		if (query.getOrderMap() != null && cursor.size() < Constants.SORT_MAX_RECORD_WITHOUT_INDEX) {
 			cursor.sort(query.getOrderMap());
 		}
-		if (query.getMax() > 0) {
-			cursor.limit(query.getMax());
-		} else if (query.getPageSize() > 0) {
-			cursor.skip(query.getPageNum() * query.getPageSize());
-		}
+
 		return fillPage(query, cursor);
 	}
 

@@ -132,6 +132,19 @@ public class Query {
 		return this;
 	}
 
+	/**
+	 * page number, start with 0.
+	 * 
+	 * @param pageNum
+	 * @return
+	 */
+	public Query pageNum(int pageNum) {
+		if (pageNum > -1) {
+			this.pageNum = pageNum;
+		}
+		return this;
+	}
+
 	public Query groupBy(String field) {
 		if (groups == null) {
 			groups = new ArrayList<String>();

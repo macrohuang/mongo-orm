@@ -145,6 +145,12 @@ public class Query {
 		return this;
 	}
 
+	public Query clearPagingInfo() {
+		this.pageNum = 0;
+		this.pageSize = -1;
+		this.max = -1;
+		return this;
+	}
 	public Query groupBy(String field) {
 		if (groups == null) {
 			groups = new ArrayList<String>();

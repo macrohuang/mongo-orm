@@ -75,6 +75,39 @@ public class Query {
 		object.add(new BasicDBObject(getDocKey(field), value));
 		return this;
 	}
+	
+	public Query or(List<GroupCondition> orConditions) {
+		if (!queryObject.containsField("$or")) {
+			queryObject.put("$or", new BasicDBList());
+		}
+		BasicDBList orCondition = (BasicDBList) queryObject.get("$or");
+		DBObject subCondition = new BasicDBObject();
+		for (GroupCondition condition : orConditions) {
+			if (condition.operators == QueryOperators.EQ) {
+				subCondition.put(getDocKey(condition.field), condition.value);
+			} else {
+				if (subCondition.get(getDocKey(condition.field)) != null) {
+					((BasicDBObject) queryObject.get(getDocKey(condition.field))).put(condition.operators.getOperate(), condition.value);
+				} else {
+					subCondition.put(getDocKey(condition.field), new BasicDBObject(condition.operators.getOperate(), condition.value));
+				}
+			}
+		}
+		orCondition.add(subCondition);
+		return this;
+	}
+
+	public static class GroupCondition {
+		private String field;
+		private QueryOperators operators;
+		private Object value;
+		public GroupCondition(String field, QueryOperators operators, Object value) {
+			super();
+			this.field = field;
+			this.operators = operators;
+			this.value = value;
+		}
+	}
 
 	public Query addOrder(String field, Order order) {
 		if (orderMap == null)

@@ -154,6 +154,8 @@ public class DBObjectUtil {
 										List list = new ArrayList();
 										list.addAll((Collection) docVal);
 										field.set(po, list);
+									} else {
+										field.set(po, docVal);
 									}
 								} else {
 									field.set(po, docVal);

@@ -343,7 +343,7 @@ public class BasicMongoDBTemplate {
 		} else {
 			cursor = collection.find(query.buildQuery());
 		}
-		if (query.getOrderMap() != null && cursor.size() < Constants.SORT_MAX_RECORD_WITHOUT_INDEX) {
+		if (canSort(collection, query.getOrderMap(), cursor.count())) {
 			cursor.sort(query.getOrderMap());
 		}
 		if (query.getPageSize() > 0) {
@@ -368,7 +368,7 @@ public class BasicMongoDBTemplate {
 		} else {
 			cursor = collection.find(query.buildQuery());
 		}
-		if (query.getOrderMap() != null) {
+		if (canSort(collection, query.getOrderMap(), cursor.count())) {
 			cursor.sort(query.getOrderMap());
 		}
 		if (query.getMax() > 0) {
@@ -377,6 +377,34 @@ public class BasicMongoDBTemplate {
 			cursor.skip(query.getPageNum() * query.getPageSize());
 		}
 		return fillResult(query, cursor);
+	}
+
+	private boolean canSort(DBCollection collection, DBObject order, int size) {
+		List<DBObject> indexs = collection.getIndexInfo();
+		if (order == null || order.keySet().size() == 0)
+			return false;
+		if (size < Constants.SORT_MAX_RECORD_WITHOUT_INDEX) {// Total result has
+																// a little
+																// size, can be
+																// sorted
+																// directly.
+			return true;
+		}
+		int indexFireTimes = 0;
+		for (String orderField : order.keySet()) {
+			for (DBObject index : indexs) {
+				if (((DBObject) index.get("key")).containsField(orderField)) {
+					indexFireTimes++;
+				}
+			}
+		}
+		if (indexFireTimes < (order.keySet().size() + 1) / 2) {
+			LOGGER.warn("Requir sort on a max result set, but not half of orders key has an index, will not sort at all.");
+			return false;
+		} else if (indexFireTimes < order.keySet().size()) {
+			LOGGER.warn("Requir sort on a max result set, but not all order key has an index, may be thrown a MongoException.");
+		}
+		return true;
 	}
 
 	protected boolean isOperateSuccess(WriteResult result) {

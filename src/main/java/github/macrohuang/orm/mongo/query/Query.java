@@ -191,11 +191,12 @@ public class Query {
 		return this;
 	}
 	public Query groupBy(String field) {
-		if (groups == null) {
-			groups = new ArrayList<String>();
-		}
-		groups.add(field);
-		return this;
+		throw new UnsupportedOperationException("Unsupport in this version.");
+		// if (groups == null) {
+		// groups = new ArrayList<String>();
+		// }
+		// groups.add(field);
+		// return this;
 	}
 
 	public List<String> getGroups() {

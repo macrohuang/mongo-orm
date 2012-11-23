@@ -1,6 +1,6 @@
 package github.macrohuang.orm.mongo.exception;
 
-public class MongoDatasourceException extends BizRuntimeException {
+public class MongoDatasourceException extends MongoOrmRuntimeException {
 	/**
 	 * 
 	 */

@@ -14,6 +14,7 @@ import com.mongodb.DB;
 public class DefaultMongoDBFactory implements MongoDBFactory, InitializingBean {
 	private AbstractMongoDatasourceFactory datasourceFactory;
 	private Map<String, DB> dbMap = new ConcurrentHashMap<String, DB>();
+	private DB defaultDb;
 	private final Logger logger = Logger.getLogger(DefaultMongoDBFactory.class);
 
 	public AbstractMongoDatasourceFactory getDatasourceFactory() {
@@ -28,7 +29,7 @@ public class DefaultMongoDBFactory implements MongoDBFactory, InitializingBean {
 	public DB getDB(String dbName) throws MongoDataAccessException {
 		if (Constants.coreLogEnable)
 			logger.info("get db:" + dbName);
-		return dbMap.get(dbName);
+		return dbMap.containsKey(dbName) ? dbMap.get(dbName) : defaultDb;
 	}
 
 	@Override
@@ -54,6 +55,10 @@ public class DefaultMongoDBFactory implements MongoDBFactory, InitializingBean {
 			for (String dbname : datasourceFactory.getMongoDatasource().getDatabaseNames()) {
 				dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
 			}
+		}
+		if (defaultDb == null) {// If the specify db doesn't exists, then
+			// return the local db instead.
+			defaultDb = datasourceFactory.getMongoDatasource().getDB("default");
 		}
 	}
 

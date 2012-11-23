@@ -17,6 +17,7 @@ public class DistributeMongoDBFactory implements MongoDBFactory, InitializingBea
 	private Set<AbstractMongoDatasourceFactory> datasourceFactories;
 	private Map<String, DB> dbMap = new ConcurrentHashMap<String, DB>();
 	private static final Logger logger = Logger.getLogger(DistributeMongoDBFactory.class);
+	private DB defaultDb;
 	public Set<AbstractMongoDatasourceFactory> getDatasourceFactories() {
 		return datasourceFactories;
 	}
@@ -29,7 +30,7 @@ public class DistributeMongoDBFactory implements MongoDBFactory, InitializingBea
 	public DB getDB(String dbName) throws MongoDataAccessException {
 		if (Constants.coreLogEnable)
 			logger.info("get db:" + dbName);
-		return dbMap.get(dbName);
+		return dbMap.containsKey(dbName) ? dbMap.get(dbName) : defaultDb;
 	}
 
 	@Override
@@ -60,6 +61,10 @@ public class DistributeMongoDBFactory implements MongoDBFactory, InitializingBea
 			}
 			if (datasourceFactory.getConfig().isReadSlave()) {
 				datasourceFactory.getMongoDatasource().setReadPreference(ReadPreference.SECONDARY);
+			}
+			if (defaultDb == null) {// If the specify db doesn't exists, then
+				// return the local db instead.
+				defaultDb = datasourceFactory.getMongoDatasource().getDB("default");
 			}
 		}
 	}

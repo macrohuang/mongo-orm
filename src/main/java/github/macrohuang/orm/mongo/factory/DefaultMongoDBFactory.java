@@ -25,10 +25,32 @@ public class DefaultMongoDBFactory implements MongoDBFactory, InitializingBean {
 		this.datasourceFactory = datasourceFactory;
 	}
 
+	private void loadDb() {
+		if (datasourceFactory.getInclude() != null && datasourceFactory.getInclude().size() > 0) {
+			logger.info("manually specify db list: " + datasourceFactory.getInclude());
+			for (String dbname : datasourceFactory.getInclude()) {
+				if (!dbMap.containsKey(dbname)) {
+					dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
+				}
+			}
+		} else {
+			logger.info("default all dbs in the host: " + datasourceFactory.getMongoDatasource().getDatabaseNames());
+			for (String dbname : datasourceFactory.getMongoDatasource().getDatabaseNames()) {
+				if (!dbMap.containsKey(dbname))
+					dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
+			}
+		}
+		if (defaultDb == null) {// If the specify db doesn't exists, then
+			// return the local db instead.
+			defaultDb = datasourceFactory.getMongoDatasource().getDB("default");
+		}
+	}
 	@Override
 	public DB getDB(String dbName) throws MongoDataAccessException {
 		if (Constants.coreLogEnable)
 			logger.info("get db:" + dbName);
+		if (!dbMap.containsKey(dbName))
+			loadDb();
 		return dbMap.containsKey(dbName) ? dbMap.get(dbName) : defaultDb;
 	}
 
@@ -45,21 +67,7 @@ public class DefaultMongoDBFactory implements MongoDBFactory, InitializingBean {
 			}
 			logger.info("auth pass");
 		}
-		if (datasourceFactory.getInclude() != null && datasourceFactory.getInclude().size() > 0) {
-			logger.info("manually specify db list: " + datasourceFactory.getInclude());
-			for (String dbname : datasourceFactory.getInclude()) {
-				dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
-			}
-		} else {
-			logger.info("default all dbs in the host: " + datasourceFactory.getMongoDatasource().getDatabaseNames());
-			for (String dbname : datasourceFactory.getMongoDatasource().getDatabaseNames()) {
-				dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
-			}
-		}
-		if (defaultDb == null) {// If the specify db doesn't exists, then
-			// return the local db instead.
-			defaultDb = datasourceFactory.getMongoDatasource().getDB("default");
-		}
+		loadDb();
 	}
 
 }

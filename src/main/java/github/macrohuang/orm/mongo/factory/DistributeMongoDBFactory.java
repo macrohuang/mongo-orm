@@ -26,10 +26,39 @@ public class DistributeMongoDBFactory implements MongoDBFactory, InitializingBea
 		this.datasourceFactories = datasourceFactories;
 	}
 
+	private void loadDb() {
+		for (AbstractMongoDatasourceFactory datasourceFactory : datasourceFactories) {
+			if (datasourceFactory.getInclude() != null && datasourceFactory.getInclude().size() > 0) {
+				logger.info("manually specify db list: " + datasourceFactory.getInclude());
+				for (String dbname : datasourceFactory.getInclude()) {
+					if (!dbMap.containsKey(dbname)) {
+						dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
+					}
+				}
+			} else {
+				logger.info("default all dbs in the host: " + datasourceFactory.getMongoDatasource().getDatabaseNames());
+				for (String dbname : datasourceFactory.getMongoDatasource().getDatabaseNames()) {
+					if (!dbMap.containsKey(dbname)) {
+						dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
+					}
+				}
+			}
+			if (datasourceFactory.getConfig().isReadSlave()) {
+				datasourceFactory.getMongoDatasource().setReadPreference(ReadPreference.SECONDARY);
+			}
+			if (defaultDb == null) {// If the specify db doesn't exists, then
+				// return the local db instead.
+				defaultDb = datasourceFactory.getMongoDatasource().getDB("default");
+			}
+		}
+	}
 	@Override
 	public DB getDB(String dbName) throws MongoDataAccessException {
 		if (Constants.coreLogEnable)
 			logger.info("get db:" + dbName);
+		if (!dbMap.containsKey(dbName)) {// Not in the cache map, reload
+			loadDb();
+		}
 		return dbMap.containsKey(dbName) ? dbMap.get(dbName) : defaultDb;
 	}
 
@@ -48,24 +77,7 @@ public class DistributeMongoDBFactory implements MongoDBFactory, InitializingBea
 				}
 				logger.info("auth pass");
 			}
-			if (datasourceFactory.getInclude() != null && datasourceFactory.getInclude().size() > 0) {
-				logger.info("manually specify db list: " + datasourceFactory.getInclude());
-				for (String dbname : datasourceFactory.getInclude()) {
-					dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
-				}
-			} else {
-				logger.info("default all dbs in the host: " + datasourceFactory.getMongoDatasource().getDatabaseNames());
-				for (String dbname : datasourceFactory.getMongoDatasource().getDatabaseNames()) {
-					dbMap.put(dbname, datasourceFactory.getMongoDatasource().getDB(dbname));
-				}
-			}
-			if (datasourceFactory.getConfig().isReadSlave()) {
-				datasourceFactory.getMongoDatasource().setReadPreference(ReadPreference.SECONDARY);
-			}
-			if (defaultDb == null) {// If the specify db doesn't exists, then
-				// return the local db instead.
-				defaultDb = datasourceFactory.getMongoDatasource().getDB("default");
-			}
 		}
+		loadDb();
 	}
 }

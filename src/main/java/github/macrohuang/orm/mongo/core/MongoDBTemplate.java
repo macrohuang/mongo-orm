@@ -167,7 +167,7 @@ public class MongoDBTemplate extends BasicMongoDBTemplate {
 	 * @param query
 	 * @return
 	 */
-	public <T> int getCount(DBChooser chooser, Query query) {
+	public <T> long getCount(DBChooser chooser, Query query) {
 		Assert.assertNotNull(query);
 		Assert.assertNotNull(chooser);
 		return getCountInner(getCollection(chooser), query);

@@ -320,20 +320,14 @@ public class BasicMongoDBTemplate {
 	 * @param query
 	 * @return
 	 */
-	public <T> int getCount(Query query) {
+	public <T> long getCount(Query query) {
 		Assert.assertNotNull(query);
 		return getCountInner(getCollection(query.getQueryPOClass()), query);
 	}
 
 
-	protected <T> int getCountInner(DBCollection collection, Query query) {
-		DBCursor dbCursor = null;
-		if (query.getProjection() != null) {
-			dbCursor = collection.find(query.buildQuery(), query.getProjection());
-		} else {
-			dbCursor = collection.find(query.buildQuery());
-		}
-		return dbCursor == null ? 0 : dbCursor.count();
+	protected <T> long getCountInner(DBCollection collection, Query query) {
+		return collection.count(query.buildQuery());
 	}
 
 	protected <T> Page<T> queryInner(DBCollection collection, Query query) {
